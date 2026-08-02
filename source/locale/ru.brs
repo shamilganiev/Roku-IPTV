@@ -29,5 +29,6 @@ function getRuStrings() as object
         ChannelsInLog: " каналов в "
         CategoriesLog: " категориях"
         ErrorLoadTaskMissing: "Ошибка: компонент ListaM3u не найден"
+        Language: "Язык"
     }
 end function

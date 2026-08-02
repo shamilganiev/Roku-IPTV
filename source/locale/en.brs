@@ -29,5 +29,6 @@ function getEnStrings() as object
         ChannelsInLog: " channels in "
         CategoriesLog: " categories"
         ErrorLoadTaskMissing: "Error: ListaM3u component not found"
+        Language: "Language"
     }
 end function

@@ -29,5 +29,6 @@ function getEsStrings() as object
         ChannelsInLog: " canales en "
         CategoriesLog: " categorías"
         ErrorLoadTaskMissing: "Error: componente ListaM3u no encontrado"
+        Language: "Idioma"
     }
 end function

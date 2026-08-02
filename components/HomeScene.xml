@@ -169,6 +169,30 @@
                         color="0xFFFFFFFF"
                         visible="false" />
                 </Group>
+                <Group id="MenuItem3">
+                    <Rectangle
+                        id="IconHighlight3"
+                        translation="[-10,0]"
+                        width="8"
+                        height="40"
+                        color="0xFFFF00FF"
+                        visible="false" />
+                    <Poster
+                        id="MenuIcon3"
+                        width="40"
+                        height="40"
+                        uri="pkg:/images/languageicon.png"
+                        loadDisplayMode="scaleToFit" />
+                    <Label
+                        id="MenuLabel3"
+                        translation="[50,0]"
+                        width="400"
+                        height="40"
+                        text=""
+                        font="font:MediumBoldSystemFont"
+                        color="0xFFFFFFFF"
+                        visible="false" />
+                </Group>                
             </LayoutGroup>
         </Group>
 

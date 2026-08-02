@@ -23,6 +23,12 @@ sub init()
         },
         Menu: m.top.findNode("SideMenu"),
         MenuItems: m.top.findNode("MenuItems"),
+        MenuLabels: {
+            Home: m.top.findNode("MenuLabel0"),
+            Search: m.top.findNode("MenuLabel1"),
+            Playlist: m.top.findNode("MenuLabel2"),
+            Language: m.top.findNode("MenuLabel3")
+        },
         ExpandMenu: m.top.findNode("ExpandMenu"),
         CollapseMenu: m.top.findNode("CollapseMenu"),
         LoadingAnim1: m.top.findNode("LoadingAnimation1"),
@@ -124,20 +130,21 @@ end sub
 sub applyLanguage()
     ' Apply localized strings to static interface elements
     ' Применить локализованные строки к статическим элементам интерфейса
-    homeLabel = m.top.findNode("MenuLabel0")
-    searchLabel = m.top.findNode("MenuLabel1")
-    playlistLabel = m.top.findNode("MenuLabel2")
 
-    if homeLabel <> invalid then
-        homeLabel.text = m.locale.Home
+    if m.nodes.MenuLabels.Home <> invalid then
+        m.nodes.MenuLabels.Home.text = m.locale.Home
     end if
 
-    if searchLabel <> invalid then
-        searchLabel.text = m.locale.Search
+    if m.nodes.MenuLabels.Search <> invalid then
+        m.nodes.MenuLabels.Search.text = m.locale.Search
     end if
 
-    if playlistLabel <> invalid then
-        playlistLabel.text = m.locale.ChangePlaylist
+    if m.nodes.MenuLabels.Playlist <> invalid then
+        m.nodes.MenuLabels.Playlist.text = m.locale.ChangePlaylist
+    end if
+    
+    if m.nodes.MenuLabels.Language <> invalid then
+        m.nodes.MenuLabels.Language.text = m.locale.Language
     end if
 
     if m.totalChannels <> invalid then
@@ -539,42 +546,72 @@ sub selectMenuItem()
     m.state.menuFocused = false
     m.nodes.CollapseMenu.control = "start"
     hideMenuLabels()
-    
+
     ' Return focus to the channel list when Home is selected
     ' Вернуть фокус списку каналов при выборе пункта «Главная»
     if m.state.menuItem = 0 then
         m.nodes.RowList.setFocus(true)
-    else
-        ' Create a keyboard dialog for search or playlist URL input
-        ' Создать диалог с клавиатурой для поиска или ввода URL плейлиста
+        return
+    end if
+
+    ' Open the search dialog
+    ' Открыть диалог поиска
+    if m.state.menuItem = 1 then
         kb = createObject("roSGNode", "KeyboardDialog")
         if kb = invalid then return
 
         kb.backgroundUri = "pkg:/images/FONDO.PNG"
-
-        ' Configure the dialog for content search
-        ' Настроить диалог для поиска содержимого
-        if m.state.menuItem = 1 then
-            kb.title = m.locale.SearchContent
-            kb.text = ""
-            kb.buttons = [m.locale.Search, m.locale.Cancel]
-            kb.observeField("buttonSelected", "onSearchButtonPressed")
-        else
-            ' Configure the dialog for changing the M3U playlist URL
-            ' Настроить диалог для изменения URL M3U-плейлиста
-            kb.title = m.locale.ChangePlaylistUrl
-            kb.text = m.global.lastUrl
-            kb.buttons = [
-                m.locale.Load,
-                m.locale.Cancel,
-                m.locale.RestoreOriginalUrl
-            ]
-            kb.observeField("buttonSelected", "onUrlButtonPressed")
-        end if
-
-        ' Display the configured dialog
-        ' Показать настроенный диалог
+        kb.title = m.locale.SearchContent
+        kb.text = ""
+        kb.buttons = [m.locale.Search, m.locale.Cancel]
+        kb.observeField("buttonSelected", "onSearchButtonPressed")
         m.top.dialog = kb
+        return
+    end if
+
+    ' Open the playlist URL dialog
+    ' Открыть диалог изменения URL плейлиста
+    if m.state.menuItem = 2 then
+        kb = createObject("roSGNode", "KeyboardDialog")
+        if kb = invalid then return
+
+        kb.backgroundUri = "pkg:/images/FONDO.PNG"
+        kb.title = m.locale.ChangePlaylistUrl
+        kb.text = m.global.lastUrl
+        kb.buttons = [
+            m.locale.Load,
+            m.locale.Cancel,
+            m.locale.RestoreOriginalUrl
+        ]
+        kb.observeField("buttonSelected", "onUrlButtonPressed")
+        m.top.dialog = kb
+        return
+    end if
+
+    ' TODO:
+    ' Open the language selection dialog.
+    ' Открыть диалог выбора языка.
+    if m.state.menuItem = 3 then
+        languages = getAvailableLanguages()
+
+        dialog = createObject("roSGNode", "Dialog")
+        if dialog = invalid then return
+
+        dialog.title = m.locale.Language
+
+        buttons = []
+
+        for each lang in languages
+            buttons.push(lang.name)
+        end for
+
+        buttons.push(m.locale.Cancel)
+
+        dialog.buttons = buttons
+        dialog.observeField("buttonSelected", "onLanguageSelected")
+
+        m.top.dialog = dialog
+        return
     end if
 end sub
 
@@ -710,6 +747,29 @@ sub onUrlButtonPressed()
     ' Закрыть диалог и вернуть фокус списку каналов
     m.top.dialog = invalid
     m.nodes.RowList.setFocus(true)
+end sub
+
+sub onLanguageSelected()
+
+    dialog = m.top.dialog
+    if dialog = invalid then return
+
+    languages = getAvailableLanguages()
+
+    if dialog.buttonSelected < languages.count() then
+
+        selected = languages[dialog.buttonSelected]
+
+        m.languageCode = selected.code
+        saveLanguage(m.languageCode)
+        m.locale = loadLanguage(m.languageCode)
+        applyLanguage()
+
+    end if
+
+    m.top.dialog = invalid
+    m.nodes.RowList.setFocus(true)
+
 end sub
 
 sub rowListContentChanged()

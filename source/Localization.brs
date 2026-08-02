@@ -67,3 +67,20 @@ sub saveLanguage(languageCode as dynamic)
     registry.Write("language", code)
     registry.Flush()
 end sub
+
+function getAvailableLanguages() as object
+    return [
+        {
+            code: "ru"
+            name: "Русский"
+        }
+        {
+            code: "en"
+            name: "English"
+        }
+        {
+            code: "es"
+            name: "Español"
+        }
+    ]
+end function
