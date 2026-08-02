@@ -79,7 +79,8 @@
             font="font:MediumBoldSystemFont"
             color="0xFFFFFFFF" />
 
-        <!-- Menú lateral (SideMenu) colocado después para que se renderice encima -->
+        <!-- Sidebar menu (SideMenu), placed last so it renders on top -->
+        <!-- Боковое меню (SideMenu), размещено последним, чтобы отображаться поверх остальных элементов -->
         <Group id="SideMenu">
             <Rectangle
                 id="MenuBackground"
@@ -187,7 +188,10 @@
             id="ChannelLoadedTimer"
             duration="2" />
 
-        <!-- Temporizador para simular el progreso de carga -->
+        <!-- Timer used to simulate loading progress -->
+        <!-- Таймер для имитации процесса загрузки -->
+        <!-- TODO:
+        Replace fake loading progress with a real loading indicator. -->
         <Timer
             id="LoadingProgressTimer"
             duration="0.5"
@@ -258,7 +262,8 @@
                 keyValue="[1,0]" />
         </Animation>
 
-        <!-- Animación de carga para CategoryLabel -->
+        <!-- Loading animation for CategoryLabel -->
+        <!-- Анимация загрузки для CategoryLabel -->
         <Animation
             id="LoadingAnimation1"
             duration="1.0"
@@ -269,7 +274,8 @@
                 keyValue="[1.0,0.3,1.0]" />
         </Animation>
 
-        <!-- Animación de carga para CategoryLabel2 -->
+        <!-- Loading animation for CategoryLabel2 -->
+        <!-- Анимация загрузки для CategoryLabel2 -->
         <Animation
             id="LoadingAnimation2"
             duration="1.0"
