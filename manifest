@@ -1,0 +1,22 @@
+title=TAVO TV
+major_version=1
+minor_version=1
+build_version=1
+
+' ✔️ Ícono del canal (debe ser PNG con fondo transparente)
+mm_icon_focus_hd=pkg:/images/icon.png
+
+' ✔️ Soporte para audio (corrigiendo el error)
+requires_audiometadata=true
+
+' ✔️ Imagen de splash screen (puede ser JPG o PNG)
+splash_screen_fhd=pkg:/images/splash_screen_hd2.jpg
+splash_screen_hd=pkg:/images/splash_screen_hd2.jpg
+splash_color=#808080
+splash_min_time=0
+
+' ✔️ Resolución compatible
+ui_resolutions=fhd
+
+' ✔️ Soporte para eventos de entrada y deep linking
+supports_input_launch=1

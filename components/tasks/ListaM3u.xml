@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ListaM3u" extends="Task">
+    <interface>
+        <field id="content" type="node" />
+        <field id="m3uUrl" type="string" />
+    </interface>
+    <script type="brightscript" uri="ListaM3u.brs" />
+</component>

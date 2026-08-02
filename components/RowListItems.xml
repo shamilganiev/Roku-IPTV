@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="RowListItems" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="updateContent" />
+        <field id="height" type="float" onChange="updateSize" />
+        <field id="width" type="float" onChange="updateSize" />
+        <field id="isLoading" type="boolean" value="false" onChange="onLoadingChange" />
+    </interface>
+
+    <script type="text/brightscript" uri="pkg:/components/RowListItems.brs" />
+
+    <children>
+        <Rectangle id="background" width="240" height="135" color="0x1C2526FF" />
+        <Poster id="poster" width="240" height="135" loadDisplayMode="scaleToFit" uri="pkg:/images/LODING.PNG" />
+
+        <!-- Animación de carga para el placeholder -->
+        <Animation
+            id="LoadingAnimation"
+            duration="1.0"
+            repeat="true">
+            <FloatFieldInterpolator
+                fieldToInterp="poster.opacity"
+                key="[0,0.5,1]"
+                keyValue="[1.0,0.3,1.0]" />
+        </Animation>
+    </children>
+</component>

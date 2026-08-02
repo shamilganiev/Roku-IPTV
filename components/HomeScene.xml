@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="HomeScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/components/HomeScene.brs" />
+    <children>
+        <Poster
+            id="Background"
+            width="1920"
+            height="1080"
+            uri="pkg:/images/FONDO.PNG"
+            loadDisplayMode="scaleToFill" />
+
+        <!-- "Channels loaded" text moved to the left, after the sidebar -->
+        <!-- Текст "Загружено каналов" перемещён влево, после боковой панели -->
+        <Label
+            id="ChannelCountLabel"
+            translation="[60,0]"
+            width="1860"
+            height="50"
+            font="font:SmallSystemFont"
+            color="0xFFFFFFFF"
+            text="Canales cargados: 0"
+            scale="[0.7, 0.7]"
+            vertAlign="center" />
+
+        <!-- Minimized video player with adjusted size -->
+        <!-- Миниатюрный видеоплеер с уменьшенным размером -->
+        <Video
+            id="Video"
+            translation="[1200,0]"
+            width="720"
+            height="405"
+            enableUI="false"
+            loop="true"
+            enableTrickPlay="true" />
+
+        <!-- PreviewPoster repositioned below ChannelCountLabel and above RowList -->
+        <!-- PreviewPoster перемещён под ChannelCountLabel и над RowList -->
+        <Poster
+            id="PreviewPoster"
+            translation="[60,60]"
+            width="480"
+            height="270"
+            loadDisplayMode="scaleToFit"
+            visible="false"
+            opacity="0" />
+
+        <!-- LayoutGroup containing the channel list (RowList), positioned to leave space at the top -->
+        <!-- LayoutGroup, содержащий список каналов (RowList), расположен так, чтобы оставить место сверху -->
+        <LayoutGroup
+            id="CategoryLayout"
+            translation="[110,350]"
+            layoutDirection="vert"
+            itemSpacings="[10,0,0]">
+            <Label
+                id="CategoryLabel"
+                width="600"
+                height="40"
+                font="font:MediumBoldSystemFont"
+                color="0xFFFFFFFF" />
+            <RowList
+                id="RowList"
+                itemComponentName="RowListItems"
+                numRows="2"
+                rowItemSize="[[120,150]]"
+                rowItemSpacing="[[15,0]]"
+                itemSize="[1760,300]"
+                rowFocusAnimationStyle="floatingFocus"
+                vertFocusAnimationStyle="fixedFocusWrap"
+                drawFocusFeedback="true"
+                rowSpacings="[0]" />
+        </LayoutGroup>
+
+        <!-- CategoryLabel2 -->
+        <Label
+            id="CategoryLabel2"
+            translation="[110,648]"
+            width="600"
+            height="40"
+            font="font:MediumBoldSystemFont"
+            color="0xFFFFFFFF" />
+
+        <!-- Menú lateral (SideMenu) colocado después para que se renderice encima -->
+        <Group id="SideMenu">
+            <Rectangle
+                id="MenuBackground"
+                width="60"
+                height="1080"
+                color="0x000000FF" />
+            <LayoutGroup
+                id="MenuItems"
+                translation="[10,150]"
+                layoutDirection="vert"
+                itemSpacings="[40]">
+                <Group id="MenuItem0">
+                    <Rectangle
+                        id="IconHighlight0"
+                        translation="[-10,0]"  
+                        width="8"            
+                        height="40"          
+                        color="0xFFFF00FF"
+                        visible="false" />
+                    <Poster
+                        id="MenuIcon0"
+                        width="40"
+                        height="40"
+                        uri="pkg:/images/homeicon.png"
+                        loadDisplayMode="scaleToFit" />
+                    <Label
+                        id="MenuLabel0"
+                        translation="[50,0]"
+                        width="400"
+                        height="40"
+                        text="Inicio"
+                        font="font:MediumBoldSystemFont"
+                        color="0xFFFFFFFF"
+                        visible="false" />
+                </Group>
+                <Group id="MenuItem1">
+                    <Rectangle
+                        id="IconHighlight1"
+                        translation="[-10,0]" 
+                        width="8"
+                        height="40"
+                        color="0xFFFF00FF"
+                        visible="false" />
+                    <Poster
+                        id="MenuIcon1"
+                        width="40"
+                        height="40"
+                        uri="pkg:/images/buscar.png"
+                        loadDisplayMode="scaleToFit" />
+                    <Label
+                        id="MenuLabel1"
+                        translation="[50,0]"
+                        width="400"
+                        height="40"
+                        text="Buscar"
+                        font="font:MediumBoldSystemFont"
+                        color="0xFFFFFFFF"
+                        visible="false" />
+                </Group>
+                <Group id="MenuItem2">
+                    <Rectangle
+                        id="IconHighlight2"
+                        translation="[-10,0]" 
+                        width="8"
+                        height="40"
+                        color="0xFFFF00FF"
+                        visible="false" />
+                    <Poster
+                        id="MenuIcon2"
+                        width="40"
+                        height="40"
+                        uri="pkg:/images/linkicon.png"
+                        loadDisplayMode="scaleToFit" />
+                    <Label
+                        id="MenuLabel2"
+                        translation="[50,0]"
+                        width="400"
+                        height="40"
+                        text="Cambiar Lista"
+                        font="font:MediumBoldSystemFont"
+                        color="0xFFFFFFFF"
+                        visible="false" />
+                </Group>
+            </LayoutGroup>
+        </Group>
+
+        <Rectangle
+            id="InfoBar"
+            translation="[60,980]"
+            width="1860"
+            height="100"
+            color="0x1A1A1AFF"
+            opacity="0.9"
+            visible="false">
+            <Label
+                id="InfoLabel"
+                translation="[50,30]"
+                width="1760"
+                height="40"
+                font="font:MediumBoldSystemFont"
+                color="0xFFFFFFFF" />
+        </Rectangle>
+
+        <Timer
+            id="ChannelLoadedTimer"
+            duration="2" />
+
+        <!-- Temporizador para simular el progreso de carga -->
+        <Timer
+            id="LoadingProgressTimer"
+            duration="0.5"
+            repeat="true" />
+
+        <Animation
+            id="ScrollCategoryLabelUp"
+            duration="0.03">
+            <Vector2DFieldInterpolator
+                fieldToInterp="CategoryLabel.translation"
+                key="[0,1]"
+                keyValue="[[0,-10],[0,0]]" />
+        </Animation>
+        <Animation
+            id="ScrollCategoryLabelDown"
+            duration="0.03">
+            <Vector2DFieldInterpolator
+                fieldToInterp="CategoryLabel.translation"
+                key="[0,1]"
+                keyValue="[[0,10],[0,0]]" />
+        </Animation>
+        <Animation
+            id="ScrollCategoryLabel2Up"
+            duration="0.03">
+            <Vector2DFieldInterpolator
+                fieldToInterp="CategoryLabel2.translation"
+                key="[0,1]"
+                keyValue="[[110,638],[110,648]]" />
+        </Animation>
+        <Animation
+            id="ScrollCategoryLabel2Down"
+            duration="0.03">
+            <Vector2DFieldInterpolator
+                fieldToInterp="CategoryLabel2.translation"
+                key="[0,1]"
+                keyValue="[[110,658],[110,648]]" />
+        </Animation>
+        <Animation
+            id="ExpandMenu"
+            duration="0.2">
+            <FloatFieldInterpolator
+                fieldToInterp="MenuBackground.width"
+                key="[0,1]"
+                keyValue="[60,500]" />
+        </Animation>
+        <Animation
+            id="CollapseMenu"
+            duration="0.2">
+            <FloatFieldInterpolator
+                fieldToInterp="MenuBackground.width"
+                key="[0,1]"
+                keyValue="[500,60]" />
+        </Animation>
+        <Animation
+            id="FadeInPreview"
+            duration="0.3">
+            <FloatFieldInterpolator
+                fieldToInterp="PreviewPoster.opacity"
+                key="[0,1]"
+                keyValue="[0,1]" />
+        </Animation>
+        <Animation
+            id="FadeOutPreview"
+            duration="0.3">
+            <FloatFieldInterpolator
+                fieldToInterp="PreviewPoster.opacity"
+                key="[0,1]"
+                keyValue="[1,0]" />
+        </Animation>
+
+        <!-- Animación de carga para CategoryLabel -->
+        <Animation
+            id="LoadingAnimation1"
+            duration="1.0"
+            repeat="true">
+            <FloatFieldInterpolator
+                fieldToInterp="CategoryLabel.opacity"
+                key="[0,0.5,1]"
+                keyValue="[1.0,0.3,1.0]" />
+        </Animation>
+
+        <!-- Animación de carga para CategoryLabel2 -->
+        <Animation
+            id="LoadingAnimation2"
+            duration="1.0"
+            repeat="true">
+            <FloatFieldInterpolator
+                fieldToInterp="CategoryLabel2.opacity"
+                key="[0,0.5,1]"
+                keyValue="[1.0,0.3,1.0]" />
+        </Animation>
+    </children>
+</component>
