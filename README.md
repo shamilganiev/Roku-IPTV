@@ -1,23 +1,58 @@
-📺 [TAVOTV]
+# 📺 ShaGa IPTV Player
 
-Un reproductor de listas IPTV (M3U) potente y ligero, diseñado específicamente para dispositivos Roku utilizando **BrightScript** y **SceneGraph**.
+A lightweight, open-source IPTV (M3U/M3U8) player for Roku devices built with BrightScript and SceneGraph.
 
-## ✨ Características
-* **Compatibilidad Total:** Soporta formatos M3U y M3U8.
-* **Interfaz Fluida:** Navegación optimizada para el control remoto de Roku.
-* **Categorías:** Organización automática de canales si la lista lo permite.
-* **Código Abierto:** Siéntete libre de colaborar o adaptar el código.
+## Features
 
-## 🚀 Cómo instalar (Modo Desarrollador)
-Para probar esta aplicación en tu Roku, sigue estos pasos:
-1. Descarga el contenido de este repositorio en un archivo `.zip`.
-2. Activa el **Modo Desarrollador** en tu dispositivo Roku.
-3. Accede a la IP de tu Roku desde un navegador en tu red local.
-4. Sube el archivo `.zip` mediante el instalador de aplicaciones de Roku.
+- 📺 M3U and M3U8 playlist support
+- ⚡ Fast and responsive Roku interface
+- 📂 Automatic channel grouping by category
+- 🔍 Channel search
+- 🖼️ Channel logo preview
+- ▶️ Embedded video preview player
+- 📡 Fullscreen playback
+- 💾 Recent playlist history
+- 🛠️ Open-source and easy to customize
 
-## 🛠️ Tecnologías utilizadas
-* **Lenguaje:** BrightScript
-* **Framework:** Roku SceneGraph (RSG)
+## Screenshots
 
-## ⚖️ Licencia
-Este proyecto está bajo la Licencia MIT - puedes usarlo y modificarlo libremente.
+*(Coming soon)*
+
+## Installation (Developer Mode)
+
+1. Download this repository as a ZIP archive.
+2. Enable Developer Mode on your Roku device.
+3. Open your Roku's IP address in a web browser.
+4. Upload the ZIP archive using the Roku Application Installer.
+5. Launch **ShaGa IPTV** from your Roku home screen.
+
+## Building
+
+No additional build tools are required.
+
+The project uses:
+
+- BrightScript
+- Roku SceneGraph (RSG)
+
+Simply package the project as a Roku channel.
+
+## Roadmap
+
+- [ ] Multiple interface languages
+- [ ] Favorites
+- [ ] Recently watched channels
+- [ ] EPG support
+- [ ] XMLTV support
+- [ ] Better buffering management
+- [ ] UI improvements
+
+## Contributing
+
+Contributions, bug reports, and feature requests are welcome.
+
+Feel free to fork the project and submit a Pull Request.
+
+## License
+
+Released under the MIT License.
