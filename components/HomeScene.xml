@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="HomeScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/source/locale/en.brs" />
+    <script type="text/brightscript" uri="pkg:/source/locale/es.brs" />
+    <script type="text/brightscript" uri="pkg:/source/locale/ru.brs" />
+    <script type="text/brightscript" uri="pkg:/source/Localization.brs" />
     <script type="text/brightscript" uri="pkg:/components/HomeScene.brs" />
+    
     <children>
         <Poster
             id="Background"
@@ -18,7 +23,7 @@
             height="50"
             font="font:SmallSystemFont"
             color="0xFFFFFFFF"
-            text="Canales cargados: 0"
+            text=""
             scale="[0.7, 0.7]"
             vertAlign="center" />
 
@@ -111,7 +116,7 @@
                         translation="[50,0]"
                         width="400"
                         height="40"
-                        text="Inicio"
+                        text=""
                         font="font:MediumBoldSystemFont"
                         color="0xFFFFFFFF"
                         visible="false" />
@@ -135,7 +140,7 @@
                         translation="[50,0]"
                         width="400"
                         height="40"
-                        text="Buscar"
+                        text=""
                         font="font:MediumBoldSystemFont"
                         color="0xFFFFFFFF"
                         visible="false" />
@@ -159,7 +164,7 @@
                         translation="[50,0]"
                         width="400"
                         height="40"
-                        text="Cambiar Lista"
+                        text=""
                         font="font:MediumBoldSystemFont"
                         color="0xFFFFFFFF"
                         visible="false" />

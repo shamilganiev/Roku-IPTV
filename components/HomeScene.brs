@@ -29,6 +29,12 @@ sub init()
         LoadingAnim2: m.top.findNode("LoadingAnimation2")
     }
 
+    ' Load the saved interface language
+    ' Загрузить сохранённый язык интерфейса
+    m.languageCode = loadSavedLanguage()
+    m.locale = loadLanguage(m.languageCode)
+    applyLanguage()
+
     ' Configure the Video node for faster startup
     ' Настроить узел Video для более быстрого запуска
     m.nodes.Video.enableUI = false
@@ -50,7 +56,7 @@ sub init()
     m.content = createObject("roSGNode", "ContentNode")
     for i = 0 to 1
         cat = createObject("roSGNode", "ContentNode")
-        cat.title = "Cargando..."
+        cat.title = m.locale.Loading
         for j = 0 to 19
             item = createObject("roSGNode", "ContentNode")
             item.addField("isLoading", "boolean", true)
@@ -64,8 +70,8 @@ sub init()
     ' Настроить начальный интерфейс
     m.nodes.RowList.content = m.content
     m.nodes.RowList.setFocus(true)
-    m.nodes.Labels.Category.text = "Cargando..."
-    m.nodes.Labels.Category2.text = "Cargando..."
+    m.nodes.Labels.Category.text = m.locale.Loading
+    m.nodes.Labels.Category2.text = m.locale.Loading
     m.nodes.LoadingAnim1.control = "start"
     m.nodes.LoadingAnim2.control = "start"
     
@@ -100,11 +106,11 @@ sub init()
     ' Start loading the M3U playlist
     ' Начать загрузку M3U-плейлиста
     m.LoadTask = createObject("roSGNode", "ListaM3u")
-    if m.LoadTask = invalid then print "Error: ListaM3u no encontrado": return
+    if m.LoadTask = invalid then print m.locale.ErrorLoadTaskMissing: return
     m.LoadTask.observeField("content", "rowListContentChanged")
     m.LoadTask.m3uUrl = m.global.lastUrl
     m.LoadTask.control = "RUN"
-    print "Iniciando carga inicial con: "; m.global.lastUrl
+    print m.locale.StartingInitialLoadLog; m.global.lastUrl
     
     ' Set up field observers
     ' Настроить наблюдателей за полями
@@ -113,6 +119,32 @@ sub init()
     m.nodes.Timer.observeField("fire", "restoreChannelCount")
     m.nodes.Video.observeField("state", "onVideoStateChange")
     m.nodes.Video.observeField("bufferingStatus", "onBufferingStatusChange")
+end sub
+
+sub applyLanguage()
+    ' Apply localized strings to static interface elements
+    ' Применить локализованные строки к статическим элементам интерфейса
+    homeLabel = m.top.findNode("MenuLabel0")
+    searchLabel = m.top.findNode("MenuLabel1")
+    playlistLabel = m.top.findNode("MenuLabel2")
+
+    if homeLabel <> invalid then
+        homeLabel.text = m.locale.Home
+    end if
+
+    if searchLabel <> invalid then
+        searchLabel.text = m.locale.Search
+    end if
+
+    if playlistLabel <> invalid then
+        playlistLabel.text = m.locale.ChangePlaylist
+    end if
+
+    if m.totalChannels <> invalid then
+        m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + m.totalChannels.toStr()
+    else
+        m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + "0"
+    end if
 end sub
 
 sub updateLoadingProgress()
@@ -128,7 +160,7 @@ sub updateLoadingProgress()
 
     ' Update the loading progress label
     ' Обновить текст с прогрессом загрузки
-    m.nodes.Labels.ChannelCount.text = "Cargando canales: " + m.loadingProgress.toStr() + "%"
+    m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + m.loadingProgress.toStr() + "%"
 end sub
 
 sub onRowItemFocused()
@@ -271,7 +303,7 @@ sub ChannelChange()
 
         ' Display the channel loading status
         ' Показать состояние загрузки канала
-        m.nodes.Labels.ChannelCount.text = "Cargando canal: 0%"
+        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannel + "0%"
 
         ' Start playback of the selected channel
         ' Начать воспроизведение выбранного канала
@@ -523,16 +555,20 @@ sub selectMenuItem()
         ' Configure the dialog for content search
         ' Настроить диалог для поиска содержимого
         if m.state.menuItem = 1 then
-            kb.title = "Buscar contenido"
+            kb.title = m.locale.SearchContent
             kb.text = ""
-            kb.buttons = ["Buscar", "Cancelar"]
+            kb.buttons = [m.locale.Search, m.locale.Cancel]
             kb.observeField("buttonSelected", "onSearchButtonPressed")
         else
             ' Configure the dialog for changing the M3U playlist URL
             ' Настроить диалог для изменения URL M3U-плейлиста
-            kb.title = "Cambiar URL del M3U"
+            kb.title = m.locale.ChangePlaylistUrl
             kb.text = m.global.lastUrl
-            kb.buttons = ["Cargar", "Cancelar", "Restaurar URL original"]
+            kb.buttons = [
+                m.locale.Load,
+                m.locale.Cancel,
+                m.locale.RestoreOriginalUrl
+            ]
             kb.observeField("buttonSelected", "onUrlButtonPressed")
         end if
 
@@ -549,7 +585,7 @@ sub onSearchButtonPressed()
 
     ' Stop if the dialog is unavailable
     ' Остановить выполнение, если диалог недоступен
-    if kb = invalid then print "ERROR: KeyboardDialog inválido en búsqueda": return
+    if kb = invalid then print m.locale.ErrorInvalidSearchDialog: return
 
     ' Apply the search filter when the Search button is selected
     ' Применить фильтр поиска при выборе кнопки поиска
@@ -570,7 +606,7 @@ sub onUrlButtonPressed()
 
     ' Stop if the dialog is unavailable
     ' Остановить выполнение, если диалог недоступен
-    if kb = invalid then print "ERROR: KeyboardDialog inválido en URL": return
+    if kb = invalid then print m.locale.ErrorInvalidUrlDialog: return
 
     ' Load the playlist URL entered by the user
     ' Загрузить URL плейлиста, введённый пользователем
@@ -581,7 +617,7 @@ sub onUrlButtonPressed()
 
         ' Reset the loading status
         ' Сбросить состояние загрузки
-        m.nodes.Labels.ChannelCount.text = "Cargando canales: 0%"
+        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + "0%"
         m.global.lastUrl = kb.text
 
         ' Restart the playlist loading task with the new URL
@@ -592,8 +628,8 @@ sub onUrlButtonPressed()
 
         ' Reset category labels and start loading animations
         ' Сбросить названия категорий и запустить анимации загрузки
-        m.nodes.Labels.Category.text = "Cargando..."
-        m.nodes.Labels.Category2.text = "Cargando..."
+        m.nodes.Labels.Category.text = m.locale.Loading
+        m.nodes.Labels.Category2.text = m.locale.Loading
         m.nodes.LoadingAnim1.control = "start"
         m.nodes.LoadingAnim2.control = "start"
 
@@ -602,7 +638,7 @@ sub onUrlButtonPressed()
         m.content.removeChildrenIndex(m.content.getChildCount(), 0)
         for i = 0 to 1
             cat = createObject("roSGNode", "ContentNode")
-            cat.title = "Cargando..."
+            cat.title = m.locale.Loading
             for j = 0 to 19
                 item = createObject("roSGNode", "ContentNode")
                 item.addField("isLoading", "boolean", true)
@@ -628,7 +664,7 @@ sub onUrlButtonPressed()
 
         ' Reset the loading status
         ' Сбросить состояние загрузки
-        m.nodes.Labels.ChannelCount.text = "Cargando canales: 0%"
+        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + "0%"
         m.global.lastUrl = m.originalUrl
 
         ' Restart the playlist loading task with the original URL
@@ -639,8 +675,8 @@ sub onUrlButtonPressed()
 
         ' Reset category labels and start loading animations
         ' Сбросить названия категорий и запустить анимации загрузки
-        m.nodes.Labels.Category.text = "Cargando..."
-        m.nodes.Labels.Category2.text = "Cargando..."
+        m.nodes.Labels.Category.text = m.locale.Loading
+        m.nodes.Labels.Category2.text = m.locale.Loading
         m.nodes.LoadingAnim1.control = "start"
         m.nodes.LoadingAnim2.control = "start"
 
@@ -652,7 +688,7 @@ sub onUrlButtonPressed()
         m.content.removeChildrenIndex(m.content.getChildCount(), 0)
         for i = 0 to 1
             cat = createObject("roSGNode", "ContentNode")
-            cat.title = "Cargando..."
+            cat.title = m.locale.Loading
             for j = 0 to 19
                 item = createObject("roSGNode", "ContentNode")
                 item.addField("isLoading", "boolean", true)
@@ -705,7 +741,7 @@ sub rowListContentChanged()
     ' Применить загруженное содержимое к списку каналов
     m.nodes.RowList.content = m.content
     m.totalChannels = channels
-    m.nodes.Labels.ChannelCount.text = "Canales cargados: " + channels.toStr()
+    m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + channels.toStr()
 
     ' Stop loading animations and restore label opacity
     ' Остановить анимации загрузки и восстановить непрозрачность подписей
@@ -737,14 +773,14 @@ sub rowListContentChanged()
 
     ' Log the number of loaded channels and categories
     ' Вывести в журнал количество загруженных каналов и категорий
-    print "Contenido cargado: "; channels; " canales en "; m.content.getChildCount(); " categorías"
+    print m.locale.ContentLoadedLog; channels; m.locale.ChannelsInLog; m.content.getChildCount(); m.locale.CategoriesLog
 end sub
 
 sub restoreChannelCount()
     ' Restore the total channel count when no error is active
     ' Восстановить общее количество каналов, если состояние ошибки не активно
     if not m.errorState then
-        m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
+        m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + m.totalChannels.toStr()
     end if
 end sub
 
@@ -752,17 +788,17 @@ sub onVideoStateChange()
     ' Handle changes in the video playback state
     ' Обработать изменения состояния воспроизведения видео
     state = m.nodes.Video.state
-    print "Video state changed to: "; state
+    print m.locale.VideoStateChangedLog; state
 
     ' Update the interface while the channel is buffering
     ' Обновить интерфейс во время буферизации канала
     if state = "buffering" then
-        m.nodes.Labels.ChannelCount.text = "Cargando canal: 0%"
+        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannel + "0%"
 
     ' Handle successful playback startup
     ' Обработать успешный запуск воспроизведения
     else if state = "playing" then
-        m.nodes.Labels.ChannelCount.text = "Canal cargado"
+        m.nodes.Labels.ChannelCount.text = m.locale.ChannelLoaded
         m.nodes.FadeOutPreview.control = "start"
         m.nodes.Timer.control = "start"
         m.errorState = false
@@ -774,7 +810,7 @@ sub onVideoStateChange()
     ' Handle playback errors
     ' Обработать ошибки воспроизведения
     else if state = "error" then
-        m.nodes.Labels.ChannelCount.text = "Link no funciona"
+        m.nodes.Labels.ChannelCount.text = m.locale.LinkFailed
 
         ' Restore the preview poster outside fullscreen mode
         ' Восстановить постер предпросмотра вне полноэкранного режима
@@ -792,9 +828,9 @@ sub onVideoStateChange()
     ' Обработать остановленное или завершённое воспроизведение
     else if state = "stopped" or state = "finished" then
         if m.errorState then
-            m.nodes.Labels.ChannelCount.text = "Link no funciona"
+            m.nodes.Labels.ChannelCount.text = m.locale.LinkFailed
         else
-            m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
+            m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + m.totalChannels.toStr()
 
             ' Restore the preview poster outside fullscreen mode
             ' Восстановить постер предпросмотра вне полноэкранного режима
@@ -829,7 +865,7 @@ sub onBufferingStatusChange()
     ' Validate buffering information before updating the interface
     ' Проверить данные буферизации перед обновлением интерфейса
     if status <> invalid and status.percentage <> invalid and m.nodes.Video.state = "buffering" then
-        m.nodes.Labels.ChannelCount.text = "Cargando canal: " + status.percentage.toStr() + "%"
+        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannel + status.percentage.toStr() + "%"
 
         ' Start playback after reaching 5% buffering for a faster startup
         ' Начать воспроизведение после достижения 5% буферизации для более быстрого запуска
@@ -848,7 +884,7 @@ sub forcePlayVideo()
     ' Force playback if buffering takes too long
     ' Принудительно запустить воспроизведение, если буферизация занимает слишком много времени
     if m.nodes.Video.state = "buffering" and not m.minBufferReached then
-        print "Forzando reproducción después de 3 segundos de buffering"
+        print m.locale.ForcePlaybackLog
 
         ' TODO: Verify whether forced playback is necessary for Roku Video nodes
         ' TODO: Проверить, необходим ли принудительный запуск для узлов Roku Video
@@ -865,7 +901,7 @@ sub resetErrorState()
     ' Restore the total channel count after playback stops
     ' Восстановить общее количество каналов после остановки воспроизведения
     if m.nodes.Video.state = "stopped" or m.nodes.Video.state = "finished" then
-        m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
+        m.nodes.Labels.ChannelCount.text = m.locale.ChannelsLoaded + m.totalChannels.toStr()
     end if
 end sub
 
@@ -877,7 +913,7 @@ sub filterContent(term)
     ' Create a separate row for search results
     ' Создать отдельную строку для результатов поиска
     searchRow = createObject("roSGNode", "ContentNode")
-    searchRow.title = "Búsqueda: " + term
+    searchRow.title = m.locale.SearchPrefix + term
     termLower = lcase(term)
 
     ' Search all channels across all loaded categories
@@ -920,20 +956,20 @@ sub filterContent(term)
     ' Display the number of matching results
     ' Отобразить количество найденных результатов
     if count > 0 then
-        m.nodes.Labels.ChannelCount.text = "Resultados: " + count.toStr()
+        m.nodes.Labels.ChannelCount.text = m.locale.Results + count.toStr()
         m.nodes.RowList.jumpToRowItem = [0, 0]
         updateCategoryLabel(0)
     else
         ' Clear category labels when no matches are found
         ' Очистить названия категорий, если совпадения не найдены
-        m.nodes.Labels.ChannelCount.text = "No se encontraron resultados"
+        m.nodes.Labels.ChannelCount.text = m.locale.NoResults
         m.nodes.Labels.Category.text = ""
         m.nodes.Labels.Category2.text = ""
     end if
 
     ' Log the applied filter and result count
     ' Вывести в журнал применённый фильтр и количество результатов
-    print "Filtro aplicado: "; count; " resultados para "; term
+    print m.locale.FilterAppliedLog; count; m.locale.ResultsForLog; term
 end sub
 
 function loadRecentUrls() as object
