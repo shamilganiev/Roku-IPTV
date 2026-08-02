@@ -56,6 +56,11 @@ sub init()
     if m.recentUrls.count() > 0 then
         m.global.lastUrl = m.recentUrls[0] ' Use the most recently saved URL as the default
     end if
+    
+    ' Load saved playlists from the registry
+    ' Загрузить сохранённые плейлисты из реестра
+    m.playlists = loadPlaylists()    
+        
 
     ' Initialize placeholder content
     ' Инициализировать содержимое-заглушку
@@ -569,22 +574,10 @@ sub selectMenuItem()
         return
     end if
 
-    ' Open the playlist URL dialog
-    ' Открыть диалог изменения URL плейлиста
+    ' Open the saved playlist list
+    ' Открыть список сохранённых плейлистов
     if m.state.menuItem = 2 then
-        kb = createObject("roSGNode", "KeyboardDialog")
-        if kb = invalid then return
-
-        kb.backgroundUri = "pkg:/images/FONDO.PNG"
-        kb.title = m.locale.ChangePlaylistUrl
-        kb.text = m.global.lastUrl
-        kb.buttons = [
-            m.locale.Load,
-            m.locale.Cancel,
-            m.locale.RestoreOriginalUrl
-        ]
-        kb.observeField("buttonSelected", "onUrlButtonPressed")
-        m.top.dialog = kb
+        openPlaylistDialog()
         return
     end if
 
@@ -636,6 +629,55 @@ sub onSearchButtonPressed()
     m.nodes.RowList.setFocus(true)
 end sub
 
+sub loadPlaylist(url as string)
+    ' Load the specified playlist URL
+    ' Загрузить плейлист по указанному URL
+
+    if url = "" then return
+
+    m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + "0%"
+    m.global.lastUrl = url
+
+    ' Restart the playlist loading task
+    ' Перезапустить задачу загрузки плейлиста
+    m.LoadTask.control = "STOP"
+    m.LoadTask.m3uUrl = url
+    m.LoadTask.control = "RUN"
+
+    ' Reset category labels and start loading animations
+    ' Сбросить названия категорий и запустить анимации загрузки
+    m.nodes.Labels.Category.text = m.locale.Loading
+    m.nodes.Labels.Category2.text = m.locale.Loading
+    m.nodes.LoadingAnim1.control = "start"
+    m.nodes.LoadingAnim2.control = "start"
+
+    ' Replace the current content with loading placeholders
+    ' Заменить текущее содержимое заглушками загрузки
+    m.content.removeChildrenIndex(m.content.getChildCount(), 0)
+
+    for i = 0 to 1
+        cat = createObject("roSGNode", "ContentNode")
+        cat.title = m.locale.Loading
+
+        for j = 0 to 19
+            item = createObject("roSGNode", "ContentNode")
+            item.addField("isLoading", "boolean", true)
+            item.isLoading = true
+            cat.appendChild(item)
+        end for
+
+        m.content.appendChild(cat)
+    end for
+
+    m.nodes.RowList.content = m.content
+
+    ' Restart loading progress tracking
+    ' Перезапустить отслеживание прогресса загрузки
+    m.isLoadingList = true
+    m.loadingProgress = 0
+    m.loadingTimer.control = "start"
+end sub
+
 sub onUrlButtonPressed()
     ' Retrieve the active playlist URL dialog
     ' Получить активный диалог ввода URL плейлиста
@@ -648,103 +690,16 @@ sub onUrlButtonPressed()
     ' Load the playlist URL entered by the user
     ' Загрузить URL плейлиста, введённый пользователем
     if kb.buttonSelected = 0 and kb.text <> "" then
-        ' Save the new URL in the recent URL history
-        ' Сохранить новый URL в истории последних адресов
         saveRecentUrl(kb.text)
-
-        ' Reset the loading status
-        ' Сбросить состояние загрузки
-        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + "0%"
-        m.global.lastUrl = kb.text
-
-        ' Restart the playlist loading task with the new URL
-        ' Перезапустить задачу загрузки плейлиста с новым URL
-        m.LoadTask.control = "STOP"
-        m.LoadTask.m3uUrl = kb.text
-        m.LoadTask.control = "RUN"
-
-        ' Reset category labels and start loading animations
-        ' Сбросить названия категорий и запустить анимации загрузки
-        m.nodes.Labels.Category.text = m.locale.Loading
-        m.nodes.Labels.Category2.text = m.locale.Loading
-        m.nodes.LoadingAnim1.control = "start"
-        m.nodes.LoadingAnim2.control = "start"
-
-        ' Replace the existing content with loading placeholders
-        ' Заменить существующее содержимое заглушками загрузки
-        m.content.removeChildrenIndex(m.content.getChildCount(), 0)
-        for i = 0 to 1
-            cat = createObject("roSGNode", "ContentNode")
-            cat.title = m.locale.Loading
-            for j = 0 to 19
-                item = createObject("roSGNode", "ContentNode")
-                item.addField("isLoading", "boolean", true)
-                item.isLoading = true
-                cat.appendChild(item)
-            end for
-            m.content.appendChild(cat)
-        end for
-
-        ' Apply the placeholder content and restart progress tracking
-        ' Применить содержимое-заглушку и перезапустить отслеживание прогресса
-        m.nodes.RowList.content = m.content
-        m.isLoadingList = true
-        m.loadingProgress = 0
-        m.loadingTimer.control = "start"
+        loadPlaylist(kb.text)
 
     ' Restore the original playlist URL
     ' Восстановить исходный URL плейлиста
     else if kb.buttonSelected = 2 then
-        ' Save the original URL in the recent URL history
-        ' Сохранить исходный URL в истории последних адресов
         saveRecentUrl(m.originalUrl)
-
-        ' Reset the loading status
-        ' Сбросить состояние загрузки
-        m.nodes.Labels.ChannelCount.text = m.locale.LoadingChannels + "0%"
-        m.global.lastUrl = m.originalUrl
-
-        ' Restart the playlist loading task with the original URL
-        ' Перезапустить задачу загрузки плейлиста с исходным URL
-        m.LoadTask.control = "STOP"
-        m.LoadTask.m3uUrl = m.originalUrl
-        m.LoadTask.control = "RUN"
-
-        ' Reset category labels and start loading animations
-        ' Сбросить названия категорий и запустить анимации загрузки
-        m.nodes.Labels.Category.text = m.locale.Loading
-        m.nodes.Labels.Category2.text = m.locale.Loading
-        m.nodes.LoadingAnim1.control = "start"
-        m.nodes.LoadingAnim2.control = "start"
-
-        ' TODO: Move the duplicated playlist loading setup into a separate function
-        ' TODO: Вынести повторяющуюся настройку загрузки плейлиста в отдельную функцию
-
-        ' Replace the existing content with loading placeholders
-        ' Заменить существующее содержимое заглушками загрузки
-        m.content.removeChildrenIndex(m.content.getChildCount(), 0)
-        for i = 0 to 1
-            cat = createObject("roSGNode", "ContentNode")
-            cat.title = m.locale.Loading
-            for j = 0 to 19
-                item = createObject("roSGNode", "ContentNode")
-                item.addField("isLoading", "boolean", true)
-                item.isLoading = true
-                cat.appendChild(item)
-            end for
-            m.content.appendChild(cat)
-        end for
-
-        ' Apply the placeholder content and restart progress tracking
-        ' Применить содержимое-заглушку и перезапустить отслеживание прогресса
-        m.nodes.RowList.content = m.content
-        m.isLoadingList = true
-        m.loadingProgress = 0
-        m.loadingTimer.control = "start"
+        loadPlaylist(m.originalUrl)
     end if
 
-    ' Close the dialog and return focus to the channel list
-    ' Закрыть диалог и вернуть фокус списку каналов
     m.top.dialog = invalid
     m.nodes.RowList.setFocus(true)
 end sub
@@ -1093,4 +1048,235 @@ sub saveRecentUrl(url as string)
     end for
 
     registry.flush()
+end sub
+
+function loadPlaylists() as object
+    ' Load saved playlists from the registry
+    ' Загрузить сохранённые плейлисты из реестра
+    playlists = []
+    registry = createObject("roRegistrySection", "Playlists")
+
+    if registry = invalid then return playlists
+
+    if registry.exists("items") then
+        jsonText = registry.read("items")
+
+        if jsonText <> invalid and jsonText <> "" then
+            savedPlaylists = parseJson(jsonText)
+
+            if savedPlaylists <> invalid and type(savedPlaylists) = "roArray" then
+                playlists = savedPlaylists
+            end if
+        end if
+    end if
+
+    return playlists
+end function
+
+sub savePlaylists(playlists as object)
+    ' Save the playlist collection to the registry as JSON
+    ' Сохранить коллекцию плейлистов в реестр в формате JSON
+    registry = createObject("roRegistrySection", "Playlists")
+
+    if registry = invalid then return
+
+    registry.write("items", formatJson(playlists))
+    registry.flush()
+end sub
+
+sub addPlaylist(name as string, url as string)
+    ' Add a playlist or move an existing playlist to the beginning
+    ' Добавить плейлист или переместить существующий плейлист в начало
+    if name = "" or url = "" then return
+
+    if m.playlists = invalid then
+        m.playlists = []
+    end if
+
+    updatedPlaylists = []
+
+    ' Remove an existing playlist with the same URL
+    ' Удалить существующий плейлист с таким же URL
+    for each playlist in m.playlists
+        if playlist.url <> url then
+            updatedPlaylists.push(playlist)
+        end if
+    end for
+
+    newPlaylist = {
+        name: name
+        url: url
+    }
+
+    updatedPlaylists.unshift(newPlaylist)
+
+    ' Keep no more than 20 saved playlists
+    ' Хранить не более 20 сохранённых плейлистов
+    if updatedPlaylists.count() > 20 then
+        updatedPlaylists = updatedPlaylists.slice(0, 20)
+    end if
+
+    m.playlists = updatedPlaylists
+    savePlaylists(m.playlists)
+end sub
+
+sub openPlaylistDialog()
+    ' Create the saved playlist selection dialog
+    ' Создать диалог выбора сохранённого плейлиста
+    dialog = createObject("roSGNode", "Dialog")
+    if dialog = invalid then return
+
+    dialog.title = m.locale.MyPlaylists
+
+    buttons = []
+
+    ' Add all saved playlists to the dialog
+    ' Добавить все сохранённые плейлисты в диалог
+    if m.playlists <> invalid then
+        for each playlist in m.playlists
+            if playlist.name <> invalid and playlist.name <> "" then
+                buttons.push(playlist.name)
+            end if
+        end for
+    end if
+
+    ' Save the number of playlist buttons
+    ' Сохранить количество кнопок плейлистов
+    m.playlistButtonCount = buttons.count()
+
+    buttons.push(m.locale.AddPlaylist)
+    buttons.push(m.locale.DefaultPlaylist)
+    buttons.push(m.locale.Cancel)
+
+    dialog.buttons = buttons
+    dialog.observeField("buttonSelected", "onPlaylistSelected")
+
+    m.top.dialog = dialog
+end sub
+
+sub onPlaylistSelected()
+    ' Handle playlist selection
+    ' Обработать выбор плейлиста
+    dialog = m.top.dialog
+    if dialog = invalid then return
+
+    index = dialog.buttonSelected
+
+    ' Close the current playlist list before performing the next action
+    ' Закрыть текущий список плейлистов перед следующим действием
+    m.top.dialog = invalid
+
+    ' Existing playlist selected
+    ' Выбран существующий плейлист
+    if index >= 0 and index < m.playlistButtonCount then
+        playlist = m.playlists[index]
+        loadPlaylist(playlist.url)
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    ' Add a new playlist
+    ' Добавить новый плейлист
+    if index = m.playlistButtonCount then
+        openAddPlaylistNameDialog()
+        return
+    end if
+
+    ' Load the default playlist
+    ' Загрузить исходный плейлист
+    if index = m.playlistButtonCount + 1 then
+        loadPlaylist(m.originalUrl)
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    ' Cancel or close the dialog
+    ' Отменить действие или закрыть диалог
+    m.nodes.RowList.setFocus(true)
+end sub
+
+sub openAddPlaylistNameDialog()
+    ' Open a keyboard dialog for the playlist name
+    ' Открыть экранную клавиатуру для названия плейлиста
+    kb = createObject("roSGNode", "KeyboardDialog")
+    if kb = invalid then
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    kb.backgroundUri = "pkg:/images/FONDO.PNG"
+    kb.title = m.locale.EnterPlaylistName
+    kb.text = ""
+    kb.buttons = [
+        m.locale.AddPlaylist
+        m.locale.Cancel
+    ]
+    kb.observeField("buttonSelected", "onPlaylistNameEntered")
+
+    m.top.dialog = kb
+end sub
+
+sub onPlaylistNameEntered()
+    ' Handle the entered playlist name
+    ' Обработать введённое название плейлиста
+    kb = m.top.dialog
+    if kb = invalid then return
+
+    if kb.buttonSelected = 0 and kb.text <> "" then
+        m.pendingPlaylistName = kb.text
+        m.top.dialog = invalid
+        openAddPlaylistUrlDialog()
+        return
+    end if
+
+    m.top.dialog = invalid
+    m.nodes.RowList.setFocus(true)
+end sub
+
+sub openAddPlaylistUrlDialog()
+    ' Open a keyboard dialog for the playlist URL
+    ' Открыть экранную клавиатуру для URL плейлиста
+    kb = createObject("roSGNode", "KeyboardDialog")
+    if kb = invalid then
+        m.pendingPlaylistName = invalid
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    kb.backgroundUri = "pkg:/images/FONDO.PNG"
+    kb.title = m.locale.EnterPlaylistUrl
+    kb.text = ""
+    kb.buttons = [
+        m.locale.AddPlaylist
+        m.locale.Cancel
+    ]
+    kb.observeField("buttonSelected", "onPlaylistUrlEntered")
+
+    m.top.dialog = kb
+end sub
+
+sub onPlaylistUrlEntered()
+    ' Save and load the new playlist
+    ' Сохранить и загрузить новый плейлист
+    kb = m.top.dialog
+    if kb = invalid then return
+
+    if kb.buttonSelected = 0 and kb.text <> "" and m.pendingPlaylistName <> invalid then
+        playlistName = m.pendingPlaylistName
+        playlistUrl = kb.text
+
+        addPlaylist(playlistName, playlistUrl)
+        saveRecentUrl(playlistUrl)
+
+        m.pendingPlaylistName = invalid
+        m.top.dialog = invalid
+
+        loadPlaylist(playlistUrl)
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    m.pendingPlaylistName = invalid
+    m.top.dialog = invalid
+    m.nodes.RowList.setFocus(true)
 end sub

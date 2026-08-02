@@ -30,5 +30,12 @@ function getRuStrings() as object
         CategoriesLog: " категориях"
         ErrorLoadTaskMissing: "Ошибка: компонент ListaM3u не найден"
         Language: "Язык"
+        AddPlaylist: "Добавить новый плейлист"
+        DefaultPlaylist: "Исходный плейлист"
+        EnterPlaylistName: "Введите название плейлиста"
+        EnterPlaylistUrl: "Введите URL плейлиста"
+        MyPlaylists: "Мои плейлисты"
+        PlaylistName: "Название плейлиста"
+        PlaylistUrl: "URL плейлиста"
     }
 end function

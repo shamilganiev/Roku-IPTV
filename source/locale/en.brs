@@ -30,5 +30,12 @@ function getEnStrings() as object
         CategoriesLog: " categories"
         ErrorLoadTaskMissing: "Error: ListaM3u component not found"
         Language: "Language"
+        AddPlaylist: "Add new playlist"
+        DefaultPlaylist: "Default playlist"
+        EnterPlaylistName: "Enter playlist name"
+        EnterPlaylistUrl: "Enter playlist URL"
+        MyPlaylists: "My playlists"
+        PlaylistName: "Playlist name"
+        PlaylistUrl: "Playlist URL"
     }
 end function

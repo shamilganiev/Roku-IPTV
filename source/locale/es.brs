@@ -30,5 +30,12 @@ function getEsStrings() as object
         CategoriesLog: " categorías"
         ErrorLoadTaskMissing: "Error: componente ListaM3u no encontrado"
         Language: "Idioma"
+        AddPlaylist: "Agregar nueva lista"
+        DefaultPlaylist: "Lista predeterminada"
+        EnterPlaylistName: "Ingrese el nombre de la lista"
+        EnterPlaylistUrl: "Ingrese la URL de la lista"
+        MyPlaylists: "Mis listas"
+        PlaylistName: "Nombre de la lista"
+        PlaylistUrl: "URL de la lista"
     }
 end function
