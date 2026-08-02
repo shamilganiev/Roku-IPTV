@@ -1,0 +1,11 @@
+# Archives
+*.zip
+*.7z
+*.rar
+
+# Editor settings
+.vscode/
+.idea/
+
+# Log files
+*.log
