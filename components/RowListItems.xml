@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="RowListItems" extends="Group">
+    <!--
+        Reusable RowList item used to display a channel poster or a loading placeholder.
+        Переиспользуемый элемент RowList для отображения постера канала или изображения-заглушки.
+    -->
     <interface>
         <field id="itemContent" type="node" onChange="updateContent" />
         <field id="height" type="float" onChange="updateSize" />
@@ -10,10 +14,16 @@
     <script type="text/brightscript" uri="pkg:/components/RowListItems.brs" />
 
     <children>
+        <!-- Background panel behind the poster -->
+        <!-- Фоновая панель позади постера -->
         <Rectangle id="background" width="240" height="135" color="0x1C2526FF" />
+
+        <!-- Channel poster / loading placeholder -->
+        <!-- Постер канала / изображение-заглушка -->
         <Poster id="poster" width="240" height="135" loadDisplayMode="scaleToFit" uri="pkg:/images/LODING.PNG" />
 
-        <!-- Animación de carga para el placeholder -->
+        <!-- Loading animation for the placeholder -->
+        <!-- Анимация загрузки для изображения-заглушки -->
         <Animation
             id="LoadingAnimation"
             duration="1.0"

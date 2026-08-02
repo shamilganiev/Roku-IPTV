@@ -1,29 +1,38 @@
 ' ********** Copyright 2016 Roku Corp. All Rights Reserved. **********
+' Based on Roku SceneGraph sample code.
+' Modified by Shamil Ganiev.
 
 sub Main()
-    ' Crear pantalla principal y puerto de mensajes
+    ' Create the main screen and message port
+    ' Создать главный экран и порт сообщений
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
     screen.setMessagePort(m.port)
     
-    ' Configurar variables globales con manejo de errores
+    ' Initialize global variables with error handling
+    ' Инициализировать глобальные переменные с обработкой ошибок
     initializeGlobalVariables(screen)
     
-    ' Determinar tipo de modelo
+    ' Detect the device model
+    ' Определить модель устройства
     setDeviceModel()
     
-    ' Inicializar escena principal
+    ' Initialize the main scene
+    ' Инициализировать главную сцену
     initializeScene(screen)
     
-    ' Bucle principal de eventos
+    ' Run the main event loop
+    ' Запустить главный цикл обработки событий
     runEventLoop()
 end sub
 
 sub initializeGlobalVariables(screen as Object)
-    ' Configurar nodo global con valores por defecto
+    ' Configure the global node with default values
+    ' Настроить глобальный узел со значениями по умолчанию
     m.global = screen.getGlobalNode()
     
-    ' Definir campos individualmente
+    ' Define fields individually
+    ' Определить поля по отдельности
     m.global.addField("Model", "integer", true)
     m.global.Model = 0
     m.global.addField("Options", "integer", true)
@@ -31,7 +40,8 @@ sub initializeGlobalVariables(screen as Object)
 end sub
 
 sub setDeviceModel()
-    ' Obtener y validar información del dispositivo
+    ' Retrieve and validate device information
+    ' Получить и проверить информацию об устройстве
     dev = CreateObject("roDeviceInfo")
     if dev <> invalid then
         modelString = dev.GetModel()
@@ -45,11 +55,13 @@ sub setDeviceModel()
 end sub
 
 sub initializeScene(screen as Object)
-    ' Crear y configurar la escena
+    ' Create and configure the scene
+    ' Создать и настроить сцену
     scene = screen.CreateScene("HomeScene")
     screen.show()
     
-    ' Configurar componentes con validación
+    ' Configure components with validation
+    ' Настроить компоненты с проверкой
     m.RowList = scene.findNode("RowList")
     if m.RowList <> invalid then
         m.RowList.observeField("rowItemSelected", m.port)
@@ -59,11 +71,13 @@ sub initializeScene(screen as Object)
 end sub
 
 sub runEventLoop()
-    ' Bucle principal con mejor manejo de eventos
+    ' Main event loop with improved event handling
+    ' Главный цикл обработки событий с улучшенной обработкой событий
     while true
         msg = wait(0, m.port)
         if msg = invalid then
-            ' Saltar al siguiente ciclo si el mensaje es inválido
+            ' Skip to the next iteration if the message is invalid
+            ' Перейти к следующей итерации, если сообщение недействительно
         else
             msgType = type(msg)
             if msgType = "roSGScreenEvent" then
@@ -78,13 +92,16 @@ sub runEventLoop()
 end sub
 
 sub handleNodeEvent(msg as Object)
-    ' Manejar eventos de nodos específicos
+    ' Handle events from specific nodes
+    ' Обработать события от определённых узлов
     node = msg.GetNode()
     field = msg.GetField()
     
     if node = "RowList" and field = "rowItemSelected" then
-        ' Manejar selección de elemento aquí
+        ' Get the selected item index
+        ' Получить индекс выбранного элемента
         index = msg.GetData()
-        ' Agregar lógica para manejar la selección
+        ' TODO: Add logic to handle the selected item
+        ' TODO: Добавить логику обработки выбранного элемента
     end if
 end sub

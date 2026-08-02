@@ -1,5 +1,6 @@
 sub init()
-    ' Simplificar estructura de nodos
+    ' Simplify the node structure
+    ' Упростить структуру узлов
     m.nodes = {
         Video: m.top.findNode("Video"),
         PreviewPoster: m.top.findNode("PreviewPoster"),
@@ -28,21 +29,24 @@ sub init()
         LoadingAnim2: m.top.findNode("LoadingAnimation2")
     }
 
-    ' Configurar el nodo Video para optimizar el inicio
+    ' Configure the Video node for faster startup
+    ' Настроить узел Video для более быстрого запуска
     m.nodes.Video.enableUI = false
     m.nodes.Video.loop = true
     m.nodes.Video.enableTrickPlay = true
 
-    ' Definir el URL original y cargar los últimos links desde el registro
-    m.originalUrl = "https://raw.githubusercontent.com/smolnp/IPTVru/refs/heads/gh-pages/IPTVstable.m3u8" ' URL original
+    ' Set the default playlist URL and load the most recent URLs from the registry
+    ' Задать URL плейлиста по умолчанию и загрузить последние URL из реестра
+    m.originalUrl = "https://raw.githubusercontent.com/smolnp/IPTVru/refs/heads/gh-pages/IPTVstable.m3u8" ' Default playlist URL
     m.global.addFields({lastUrl: m.originalUrl})
     m.state = {isFullScreen: false, lastRow: 0, menuItem: 0, menuFocused: false}
-    m.recentUrls = loadRecentUrls() ' Cargar los links recientes
+    m.recentUrls = loadRecentUrls() ' Load recent playlist URLs
     if m.recentUrls.count() > 0 then
-        m.global.lastUrl = m.recentUrls[0] ' Usar el último link guardado como predeterminado
+        m.global.lastUrl = m.recentUrls[0] ' Use the most recently saved URL as the default
     end if
 
-    ' Inicializar contenido con placeholders
+    ' Initialize placeholder content
+    ' Инициализировать содержимое-заглушку
     m.content = createObject("roSGNode", "ContentNode")
     for i = 0 to 1
         cat = createObject("roSGNode", "ContentNode")
@@ -56,7 +60,8 @@ sub init()
         m.content.appendChild(cat)
     end for
     
-    ' Configurar interfaz inicial
+    ' Configure the initial interface
+    ' Настроить начальный интерфейс
     m.nodes.RowList.content = m.content
     m.nodes.RowList.setFocus(true)
     m.nodes.Labels.Category.text = "Cargando..."
@@ -64,30 +69,36 @@ sub init()
     m.nodes.LoadingAnim1.control = "start"
     m.nodes.LoadingAnim2.control = "start"
     
-    ' Configurar temporizador de progreso
+    ' Configure the loading progress timer
+    ' Настроить таймер прогресса загрузки
     m.loadingTimer = m.top.findNode("LoadingProgressTimer")
     m.loadingTimer.observeField("fire", "updateLoadingProgress")
     m.loadingProgress = 0
     m.isLoadingList = true
     m.loadingTimer.control = "start"
     
-    ' Crear un temporizador para resetear el estado de error
+    ' Create a timer to reset the error state
+    ' Создать таймер для сброса состояния ошибки
     m.errorResetTimer = createObject("roSGNode", "Timer")
     m.errorResetTimer.id = "ErrorResetTimer"
-    m.errorResetTimer.duration = 5 ' 5 segundos antes de resetear el mensaje de error
+    m.errorResetTimer.duration = 5 ' 5 seconds before resetting the error message
+                                   ' 5 секунд до сброса сообщения об ошибке
     m.errorResetTimer.repeat = false
     m.errorResetTimer.observeField("fire", "resetErrorState")
     m.top.appendChild(m.errorResetTimer)
     
-    ' Crear un temporizador para forzar la reproducción si el buffering tarda demasiado
+    ' Create a timer to force playback if buffering takes too long
+    ' Создать таймер для принудительного запуска воспроизведения, если буферизация занимает слишком много времени
     m.forcePlayTimer = createObject("roSGNode", "Timer")
     m.forcePlayTimer.id = "ForcePlayTimer"
-    m.forcePlayTimer.duration = 3 ' 3 segundos antes de forzar la reproducción
+    m.forcePlayTimer.duration = 3 ' Force playback after 3 seconds
+                                  ' Принудительно запустить воспроизведение через 3 секунды
     m.forcePlayTimer.repeat = false
     m.forcePlayTimer.observeField("fire", "forcePlayVideo")
     m.top.appendChild(m.forcePlayTimer)
     
-    ' Iniciar carga de lista M3U
+    ' Start loading the M3U playlist
+    ' Начать загрузку M3U-плейлиста
     m.LoadTask = createObject("roSGNode", "ListaM3u")
     if m.LoadTask = invalid then print "Error: ListaM3u no encontrado": return
     m.LoadTask.observeField("content", "rowListContentChanged")
@@ -95,7 +106,8 @@ sub init()
     m.LoadTask.control = "RUN"
     print "Iniciando carga inicial con: "; m.global.lastUrl
     
-    ' Configurar observadores
+    ' Set up field observers
+    ' Настроить наблюдателей за полями
     m.nodes.RowList.observeField("rowItemSelected", "ChannelChange")
     m.nodes.RowList.observeField("rowItemFocused", "onRowItemFocused")
     m.nodes.Timer.observeField("fire", "restoreChannelCount")
@@ -104,36 +116,64 @@ sub init()
 end sub
 
 sub updateLoadingProgress()
+    ' Update the simulated loading progress
+    ' Обновить имитацию прогресса загрузки
     if not m.isLoadingList then return
+
     m.loadingProgress += 5
+
+    ' Limit the displayed progress to 99% until loading is complete
+    ' Ограничить отображаемый прогресс 99% до завершения загрузки
     if m.loadingProgress > 99 then m.loadingProgress = 99
+
+    ' Update the loading progress label
+    ' Обновить текст с прогрессом загрузки
     m.nodes.Labels.ChannelCount.text = "Cargando canales: " + m.loadingProgress.toStr() + "%"
 end sub
 
 sub onRowItemFocused()
+    ' Handle changes to the currently focused item
+    ' Обработать изменение текущего выбранного элемента
     focused = m.nodes.RowList.rowItemFocused
+
+    ' Ensure the focus information is valid
+    ' Убедиться, что информация о фокусе корректна
     if focused.count() <> 2 then return
+
     row = focused[0]
     itemIndex = focused[1]
+
+    ' Validate row and item indices
+    ' Проверить корректность индексов строки и элемента
     if row < 0 or row >= m.content.getChildCount() then return
     category = m.content.getChild(row)
     if itemIndex < 0 or itemIndex >= category.getChildCount() then return
     
     item = category.getChild(itemIndex)
+
+    ' Hide additional information while loading placeholders
+    ' Скрыть дополнительную информацию во время отображения заглушек
     if item = invalid or item.isLoading then
         m.nodes.InfoBar.visible = false
         m.nodes.PreviewPoster.visible = false
         return
     end if
     
+    ' Update the information bar with the selected item
+    ' Обновить информационную панель данными выбранного элемента
     m.nodes.Labels.Info.text = item.title
     m.nodes.InfoBar.visible = true
+
+    ' Display the poster or a fallback image
+    ' Показать постер или изображение по умолчанию
     if item.HDPosterUrl <> "" then
         m.nodes.PreviewPoster.uri = item.HDPosterUrl
     else
         m.nodes.PreviewPoster.uri = "pkg:/images/SINIMAGEN.PNG"
     end if
 
+    ' Show or hide the preview poster depending on playback state
+    ' Показать или скрыть постер предпросмотра в зависимости от состояния воспроизведения
     if m.nodes.Video.state = "playing" and not m.state.isFullScreen then
         m.nodes.PreviewPoster.visible = true
         m.nodes.FadeInPreview.control = "start"
@@ -143,27 +183,43 @@ sub onRowItemFocused()
     else
         m.nodes.FadeOutPreview.control = "start"
     end if
+
+    ' Update the category labels
+    ' Обновить названия категорий
     updateCategoryLabel(row)
 end sub
 
 sub updateCategoryLabel(row)
+    ' Update the category labels shown in the interface
+    ' Обновить названия категорий, отображаемых в интерфейсе
     totalRows = m.content.getChildCount()
+
+    ' Nothing to update if there are no categories
+    ' Нечего обновлять, если категории отсутствуют
     if totalRows = 0 then return
+
     m.nodes.Labels.Category.text = m.content.getChild(row).title
+
+    ' Display the next category if available
+    ' Отобразить следующую категорию, если она существует
     if row + 1 < totalRows then
         m.nodes.Labels.Category2.text = m.content.getChild(row + 1).title
     else
         m.nodes.Labels.Category2.text = ""
     end if
     
+    ' Animate category changes when moving between rows
+    ' Анимировать смену категорий при переходе между строками
     if m.state.lastRow <> row then
         scrolls = m.nodes.Scrolls
         isUp = m.state.lastRow > row or (m.state.lastRow = totalRows - 1 and row = 0)
+
         if isUp then
             scrolls.Up.control = "start"
         else
             scrolls.Down.control = "start"
         end if
+
         if m.nodes.Labels.Category2.text <> "" then
             if isUp then
                 scrolls.Up2.control = "start"
@@ -171,17 +227,32 @@ sub updateCategoryLabel(row)
                 scrolls.Down2.control = "start"
             end if
         end if
+
+        ' Save the current row for the next comparison
+        ' Сохранить текущую строку для следующего сравнения
         m.state.lastRow = row
     end if
 end sub
 
 sub ChannelChange()
+    ' Handle channel selection
+    ' Обработать выбор канала
     focused = m.nodes.RowList.rowItemFocused
+
+    ' Validate the selected item and ensure it has a playable URL
+    ' Проверить выбранный элемент и убедиться, что у него есть URL для воспроизведения
     if focused.count() <> 2 or m.content.getChild(focused[0]).getChild(focused[1]).url = "" then return
+
     item = m.content.getChild(focused[0]).getChild(focused[1])
+
+    ' Ignore placeholder items while the playlist is loading
+    ' Игнорировать элементы-заглушки во время загрузки плейлиста
     if item.isLoading then return
     
     video = m.nodes.Video
+
+    ' If the selected channel is already playing, switch to fullscreen mode
+    ' Если выбранный канал уже воспроизводится, перейти в полноэкранный режим
     if m.currentlyPlayingItem <> invalid and m.currentlyPlayingItem.url = item.url and not m.state.isFullScreen then
         video.translation = [0,0]
         video.width = 1920
@@ -189,33 +260,61 @@ sub ChannelChange()
         video.enableUI = true
         setFullScreen(true)
     else
+        ' Configure the video player for preview mode
+        ' Настроить видеоплеер для режима предпросмотра
         if not m.state.isFullScreen then
             video.translation = [1200,0]
             video.width = 720
             video.height = 405
             video.enableUI = false
         end if
+
+        ' Display the channel loading status
+        ' Показать состояние загрузки канала
         m.nodes.Labels.ChannelCount.text = "Cargando canal: 0%"
+
+        ' Start playback of the selected channel
+        ' Начать воспроизведение выбранного канала
         video.content = item
         video.control = "play"
         m.currentlyPlayingItem = item
+
+        ' Hide the preview poster
+        ' Скрыть постер предпросмотра
         m.nodes.FadeOutPreview.control = "start"
+
+        ' Reset playback state
+        ' Сбросить состояние воспроизведения
         m.errorState = false
-        m.minBufferReached = false ' Reiniciar bandera para controlar el buffering mínimo
-        m.forcePlayTimer.control = "start" ' Iniciar temporizador para forzar reproducción
+        m.minBufferReached = false ' Reset the minimum buffering flag
+                                   ' Сбросить флаг минимальной буферизации
+
+        ' Start the timer that forces playback if buffering takes too long
+        ' Запустить таймер принудительного запуска воспроизведения, если буферизация затянулась
+        m.forcePlayTimer.control = "start"
     end if
 end sub
 
 sub setFullScreen(state)
+    ' Update the fullscreen state
+    ' Обновить состояние полноэкранного режима
     m.state.isFullScreen = state
     nodes = m.nodes
+
+    ' Show or hide interface elements depending on fullscreen mode
+    ' Показать или скрыть элементы интерфейса в зависимости от полноэкранного режима
     nodes.RowList.visible = not state
     nodes.Labels.Category.visible = not state
     nodes.Labels.Category2.visible = not state
     nodes.Labels.ChannelCount.visible = not state
     nodes.InfoBar.visible = not state
     nodes.Menu.visible = not state
-    
+
+    ' TODO: Simplify preview poster visibility logic (duplicate FadeOutPreview calls)
+    ' TODO: Упростить логику отображения постера предпросмотра (дублируются вызовы FadeOutPreview)
+
+    ' Update the preview poster visibility
+    ' Обновить видимость постера предпросмотра
     if not state and nodes.Video.state <> "playing" then
         nodes.PreviewPoster.visible = true
         nodes.FadeInPreview.control = "start"
@@ -224,11 +323,19 @@ sub setFullScreen(state)
     else
         nodes.FadeOutPreview.control = "start"
     end if
-    
-    if state then 
+
+    ' Move focus to the appropriate component
+    ' Переместить фокус на соответствующий компонент
+    if state then
         nodes.Video.setFocus(true)
-    else 
+    else
         nodes.RowList.setFocus(true)
+
+        ' TODO: Move preview mode configuration to a separate function
+        ' TODO: Вынести настройку режима предпросмотра в отдельную функцию
+
+        ' Restore the video player to preview mode
+        ' Вернуть видеоплеер в режим предпросмотра
         nodes.Video.translation = [1200,0]
         nodes.Video.width = 720
         nodes.Video.height = 405
@@ -237,10 +344,20 @@ sub setFullScreen(state)
 end sub
 
 function onKeyEvent(key, press) as boolean
+    ' Ignore key-release events
+    ' Игнорировать события отпускания кнопки
     if not press then return false
+
+    ' Handle remote-control input while the video is in fullscreen mode
+    ' Обработать команды пульта в полноэкранном режиме
     if m.state.isFullScreen then
         video = m.nodes.Video
+
+        ' Exit fullscreen mode and restore the preview player
+        ' Выйти из полноэкранного режима и восстановить окно предпросмотра
         if key = "back" then
+            ' TODO: Move preview player configuration to a separate function
+            ' TODO: Вынести настройку окна предпросмотра в отдельную функцию
             video.translation = [1200,0]
             video.width = 720
             video.height = 405
@@ -248,14 +365,31 @@ function onKeyEvent(key, press) as boolean
             setFullScreen(false)
             return true
         end if
+
+        ' TODO: Toggle between pause and resume instead of always pausing
+        ' TODO: Переключать паузу и продолжение вместо постоянной установки паузы
         if key = "play" or key = "pause" then video.control = "pause": return true
+
+        ' Seek forward by 10 seconds
+        ' Перемотать вперёд на 10 секунд
         if key = "fastforward" then video.seek = video.position + 10: return true
+
+        ' Seek backward by 10 seconds
+        ' Перемотать назад на 10 секунд
         if key = "rewind" then video.seek = video.position - 10: return true
+
+        ' Consume all other key events while in fullscreen mode
+        ' Перехватить все остальные нажатия в полноэкранном режиме
         return true
     end if
     
+    ' Handle input while the sidebar menu is focused
+    ' Обработать команды, когда фокус находится на боковом меню
     if m.state.menuFocused then
         itemsCount = m.nodes.MenuItems.getChildCount() - 1
+
+        ' Close the sidebar menu and return focus to the channel list
+        ' Закрыть боковое меню и вернуть фокус списку каналов
         if key = "right" or key = "back" then
             m.state.menuFocused = false
             m.nodes.RowList.setFocus(true)
@@ -263,21 +397,32 @@ function onKeyEvent(key, press) as boolean
             hideMenuLabels()
             return true
         end if
+
+        ' Move to the previous menu item
+        ' Перейти к предыдущему пункту меню
         if key = "up" and m.state.menuItem > 0 then
             m.state.menuItem--
             updateMenuFocus()
             return true
         end if
+
+        ' Move to the next menu item
+        ' Перейти к следующему пункту меню
         if key = "down" and m.state.menuItem < itemsCount then
             m.state.menuItem++
             updateMenuFocus()
             return true
         end if
+
+        ' Activate the selected menu item
+        ' Активировать выбранный пункт меню
         if key = "OK" then
             selectMenuItem()
             return true
         end if
     else
+        ' Open the sidebar menu
+        ' Открыть боковое меню
         if key = "left" then
             m.state.menuFocused = true
             m.nodes.Menu.setFocus(true)
@@ -285,14 +430,24 @@ function onKeyEvent(key, press) as boolean
             updateMenuFocus()
             return true
         end if
+
+        ' Select or play the currently focused channel
+        ' Выбрать или запустить текущий канал
         if key = "OK" then 
             ChannelChange()
             return true
         end if
+
+        ' Handle the Back button outside the sidebar menu
+        ' Обработать кнопку Back вне бокового меню
         if key = "back" then
-            ' Si el video está reproduciendo en segundo plano y la barra lateral no está abierta,
-            ' abrir pantalla completa
+            ' If the video is playing in the background and the sidebar is closed,
+            ' switch to fullscreen mode
+            ' Если видео воспроизводится в фоновом режиме и боковое меню закрыто,
+            ' перейти в полноэкранный режим
             if m.nodes.Video.state = "playing" and not m.state.isFullScreen and not m.state.menuFocused then
+                ' TODO: Move fullscreen player configuration to a separate function
+                ' TODO: Вынести настройку полноэкранного плеера в отдельную функцию
                 m.nodes.Video.translation = [0,0]
                 m.nodes.Video.width = 1920
                 m.nodes.Video.height = 1080
@@ -300,18 +455,32 @@ function onKeyEvent(key, press) as boolean
                 setFullScreen(true)
                 return true
             end if
+
+            ' Consume the Back button even when no action is performed
+            ' Перехватить кнопку Back, даже если действие не выполнено
             return true
         end if
     end if
+
+    ' Allow unhandled key events to propagate
+    ' Разрешить дальнейшую обработку необработанных нажатий
     return false
 end function
 
 sub updateMenuFocus()
+    ' Update the visual focus state of all sidebar menu items
+    ' Обновить визуальное состояние фокуса всех пунктов бокового меню
     for i = 0 to m.nodes.MenuItems.getChildCount() - 1
         item = m.nodes.MenuItems.getChild(i)
         label = item.findNode("MenuLabel" + i.toStr())
         icon = item.findNode("IconHighlight" + i.toStr())
+
+        ' Show the menu label while the sidebar is expanded
+        ' Показать подпись пункта меню, пока боковое меню раскрыто
         label.visible = true
+
+        ' Highlight the currently selected menu item
+        ' Выделить текущий выбранный пункт меню
         if i = m.state.menuItem then
             label.color = "0xFFFF00FF"
             icon.visible = true
@@ -323,6 +492,8 @@ sub updateMenuFocus()
 end sub
 
 sub hideMenuLabels()
+    ' Hide all sidebar labels and focus indicators
+    ' Скрыть все подписи и индикаторы фокуса бокового меню
     for i = 0 to m.nodes.MenuItems.getChildCount() - 1
         item = m.nodes.MenuItems.getChild(i)
         item.findNode("MenuLabel" + i.toStr()).visible = false
@@ -331,55 +502,103 @@ sub hideMenuLabels()
 end sub
 
 sub selectMenuItem()
+    ' Close the sidebar menu before processing the selected item
+    ' Закрыть боковое меню перед обработкой выбранного пункта
     m.state.menuFocused = false
     m.nodes.CollapseMenu.control = "start"
     hideMenuLabels()
     
+    ' Return focus to the channel list when Home is selected
+    ' Вернуть фокус списку каналов при выборе пункта «Главная»
     if m.state.menuItem = 0 then
         m.nodes.RowList.setFocus(true)
     else
+        ' Create a keyboard dialog for search or playlist URL input
+        ' Создать диалог с клавиатурой для поиска или ввода URL плейлиста
         kb = createObject("roSGNode", "KeyboardDialog")
         if kb = invalid then return
+
         kb.backgroundUri = "pkg:/images/FONDO.PNG"
+
+        ' Configure the dialog for content search
+        ' Настроить диалог для поиска содержимого
         if m.state.menuItem = 1 then
             kb.title = "Buscar contenido"
             kb.text = ""
             kb.buttons = ["Buscar", "Cancelar"]
             kb.observeField("buttonSelected", "onSearchButtonPressed")
         else
+            ' Configure the dialog for changing the M3U playlist URL
+            ' Настроить диалог для изменения URL M3U-плейлиста
             kb.title = "Cambiar URL del M3U"
             kb.text = m.global.lastUrl
             kb.buttons = ["Cargar", "Cancelar", "Restaurar URL original"]
             kb.observeField("buttonSelected", "onUrlButtonPressed")
         end if
+
+        ' Display the configured dialog
+        ' Показать настроенный диалог
         m.top.dialog = kb
     end if
 end sub
 
 sub onSearchButtonPressed()
+    ' Retrieve the active search dialog
+    ' Получить активный диалог поиска
     kb = m.top.dialog
+
+    ' Stop if the dialog is unavailable
+    ' Остановить выполнение, если диалог недоступен
     if kb = invalid then print "ERROR: KeyboardDialog inválido en búsqueda": return
+
+    ' Apply the search filter when the Search button is selected
+    ' Применить фильтр поиска при выборе кнопки поиска
     if kb.buttonSelected = 0 and kb.text <> "" then
         filterContent(kb.text)
     end if
+
+    ' Close the dialog and return focus to the channel list
+    ' Закрыть диалог и вернуть фокус списку каналов
     m.top.dialog = invalid
     m.nodes.RowList.setFocus(true)
 end sub
 
 sub onUrlButtonPressed()
+    ' Retrieve the active playlist URL dialog
+    ' Получить активный диалог ввода URL плейлиста
     kb = m.top.dialog
+
+    ' Stop if the dialog is unavailable
+    ' Остановить выполнение, если диалог недоступен
     if kb = invalid then print "ERROR: KeyboardDialog inválido en URL": return
+
+    ' Load the playlist URL entered by the user
+    ' Загрузить URL плейлиста, введённый пользователем
     if kb.buttonSelected = 0 and kb.text <> "" then
+        ' Save the new URL in the recent URL history
+        ' Сохранить новый URL в истории последних адресов
         saveRecentUrl(kb.text)
+
+        ' Reset the loading status
+        ' Сбросить состояние загрузки
         m.nodes.Labels.ChannelCount.text = "Cargando canales: 0%"
         m.global.lastUrl = kb.text
+
+        ' Restart the playlist loading task with the new URL
+        ' Перезапустить задачу загрузки плейлиста с новым URL
         m.LoadTask.control = "STOP"
         m.LoadTask.m3uUrl = kb.text
         m.LoadTask.control = "RUN"
+
+        ' Reset category labels and start loading animations
+        ' Сбросить названия категорий и запустить анимации загрузки
         m.nodes.Labels.Category.text = "Cargando..."
         m.nodes.Labels.Category2.text = "Cargando..."
         m.nodes.LoadingAnim1.control = "start"
         m.nodes.LoadingAnim2.control = "start"
+
+        ' Replace the existing content with loading placeholders
+        ' Заменить существующее содержимое заглушками загрузки
         m.content.removeChildrenIndex(m.content.getChildCount(), 0)
         for i = 0 to 1
             cat = createObject("roSGNode", "ContentNode")
@@ -392,21 +611,44 @@ sub onUrlButtonPressed()
             end for
             m.content.appendChild(cat)
         end for
+
+        ' Apply the placeholder content and restart progress tracking
+        ' Применить содержимое-заглушку и перезапустить отслеживание прогресса
         m.nodes.RowList.content = m.content
         m.isLoadingList = true
         m.loadingProgress = 0
         m.loadingTimer.control = "start"
+
+    ' Restore the original playlist URL
+    ' Восстановить исходный URL плейлиста
     else if kb.buttonSelected = 2 then
+        ' Save the original URL in the recent URL history
+        ' Сохранить исходный URL в истории последних адресов
         saveRecentUrl(m.originalUrl)
+
+        ' Reset the loading status
+        ' Сбросить состояние загрузки
         m.nodes.Labels.ChannelCount.text = "Cargando canales: 0%"
         m.global.lastUrl = m.originalUrl
+
+        ' Restart the playlist loading task with the original URL
+        ' Перезапустить задачу загрузки плейлиста с исходным URL
         m.LoadTask.control = "STOP"
         m.LoadTask.m3uUrl = m.originalUrl
         m.LoadTask.control = "RUN"
+
+        ' Reset category labels and start loading animations
+        ' Сбросить названия категорий и запустить анимации загрузки
         m.nodes.Labels.Category.text = "Cargando..."
         m.nodes.Labels.Category2.text = "Cargando..."
         m.nodes.LoadingAnim1.control = "start"
         m.nodes.LoadingAnim2.control = "start"
+
+        ' TODO: Move the duplicated playlist loading setup into a separate function
+        ' TODO: Вынести повторяющуюся настройку загрузки плейлиста в отдельную функцию
+
+        ' Replace the existing content with loading placeholders
+        ' Заменить существующее содержимое заглушками загрузки
         m.content.removeChildrenIndex(m.content.getChildCount(), 0)
         for i = 0 to 1
             cat = createObject("roSGNode", "ContentNode")
@@ -419,36 +661,66 @@ sub onUrlButtonPressed()
             end for
             m.content.appendChild(cat)
         end for
+
+        ' Apply the placeholder content and restart progress tracking
+        ' Применить содержимое-заглушку и перезапустить отслеживание прогресса
         m.nodes.RowList.content = m.content
         m.isLoadingList = true
         m.loadingProgress = 0
         m.loadingTimer.control = "start"
     end if
+
+    ' Close the dialog and return focus to the channel list
+    ' Закрыть диалог и вернуть фокус списку каналов
     m.top.dialog = invalid
     m.nodes.RowList.setFocus(true)
 end sub
 
 sub rowListContentChanged()
+    ' Rebuild the channel list after playlist loading completes
+    ' Перестроить список каналов после завершения загрузки плейлиста
     channels = 0
+
+    ' Remove the current placeholder or previous content
+    ' Удалить текущие заглушки или предыдущее содержимое
     m.content.removeChildrenIndex(m.content.getChildCount(), 0)
+
+    ' Clone each loaded category and its channel items
+    ' Клонировать каждую загруженную категорию и её каналы
     for each cat in m.LoadTask.content.getChildren(-1, 0)
         categoryClone = cat.clone(true)
+
+        ' Mark all cloned items as fully loaded
+        ' Отметить все клонированные элементы как полностью загруженные
         for each item in categoryClone.getChildren(-1, 0)
             item.addField("isLoading", "boolean", true)
             item.isLoading = false
         end for
+
         m.content.appendChild(categoryClone)
         channels += categoryClone.getChildCount()
     end for
+
+    ' Apply the loaded content to the channel list
+    ' Применить загруженное содержимое к списку каналов
     m.nodes.RowList.content = m.content
     m.totalChannels = channels
     m.nodes.Labels.ChannelCount.text = "Canales cargados: " + channels.toStr()
+
+    ' Stop loading animations and restore label opacity
+    ' Остановить анимации загрузки и восстановить непрозрачность подписей
     m.nodes.LoadingAnim1.control = "stop"
     m.nodes.LoadingAnim2.control = "stop"
     m.nodes.Labels.Category.opacity = 1.0
     m.nodes.Labels.Category2.opacity = 1.0
+
+    ' Stop loading progress tracking
+    ' Остановить отслеживание прогресса загрузки
     m.isLoadingList = false
     m.loadingTimer.control = "stop"
+
+    ' Display the first and second category labels when available
+    ' Отобразить названия первой и второй категорий, если они доступны
     if m.content.getChildCount() > 0 then
         m.nodes.Labels.Category.text = m.content.getChild(0).title
         if m.content.getChildCount() > 1 then
@@ -457,51 +729,90 @@ sub rowListContentChanged()
             m.nodes.Labels.Category2.text = ""
         end if
     else
+        ' Clear category labels if the playlist contains no categories
+        ' Очистить названия категорий, если плейлист не содержит категорий
         m.nodes.Labels.Category.text = ""
         m.nodes.Labels.Category2.text = ""
     end if
+
+    ' Log the number of loaded channels and categories
+    ' Вывести в журнал количество загруженных каналов и категорий
     print "Contenido cargado: "; channels; " canales en "; m.content.getChildCount(); " categorías"
 end sub
 
 sub restoreChannelCount()
+    ' Restore the total channel count when no error is active
+    ' Восстановить общее количество каналов, если состояние ошибки не активно
     if not m.errorState then
         m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
     end if
 end sub
 
 sub onVideoStateChange()
+    ' Handle changes in the video playback state
+    ' Обработать изменения состояния воспроизведения видео
     state = m.nodes.Video.state
     print "Video state changed to: "; state
+
+    ' Update the interface while the channel is buffering
+    ' Обновить интерфейс во время буферизации канала
     if state = "buffering" then
         m.nodes.Labels.ChannelCount.text = "Cargando canal: 0%"
+
+    ' Handle successful playback startup
+    ' Обработать успешный запуск воспроизведения
     else if state = "playing" then
         m.nodes.Labels.ChannelCount.text = "Canal cargado"
         m.nodes.FadeOutPreview.control = "start"
         m.nodes.Timer.control = "start"
         m.errorState = false
-        m.minBufferReached = true ' Buffering mínimo alcanzado, permitir reproducción continua
-        m.forcePlayTimer.control = "stop" ' Detener el temporizador de forzar reproducción
+        m.minBufferReached = true ' Minimum buffering threshold reached; allow continuous playback
+                                  ' Достигнут минимальный порог буферизации; разрешить непрерывное воспроизведение
+        m.forcePlayTimer.control = "stop" ' Stop the forced-playback timer
+                                          ' Остановить таймер принудительного запуска воспроизведения
+
+    ' Handle playback errors
+    ' Обработать ошибки воспроизведения
     else if state = "error" then
         m.nodes.Labels.ChannelCount.text = "Link no funciona"
+
+        ' Restore the preview poster outside fullscreen mode
+        ' Восстановить постер предпросмотра вне полноэкранного режима
         if not m.state.isFullScreen then
             m.nodes.PreviewPoster.visible = true
             m.nodes.FadeInPreview.control = "start"
         end if
+
         m.errorState = true
         m.errorResetTimer.control = "start"
-        m.forcePlayTimer.control = "stop" ' Detener el temporizador si hay un error
+        m.forcePlayTimer.control = "stop" ' Stop the timer when an error occurs
+                                          ' Остановить таймер при возникновении ошибки
+
+    ' Handle stopped or completed playback
+    ' Обработать остановленное или завершённое воспроизведение
     else if state = "stopped" or state = "finished" then
         if m.errorState then
             m.nodes.Labels.ChannelCount.text = "Link no funciona"
         else
             m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
+
+            ' Restore the preview poster outside fullscreen mode
+            ' Восстановить постер предпросмотра вне полноэкранного режима
             if not m.state.isFullScreen then
                 m.nodes.PreviewPoster.visible = true
                 m.nodes.FadeInPreview.control = "start"
             end if
         end if
-        m.forcePlayTimer.control = "stop" ' Detener el temporizador si el video se detiene
+
+        m.forcePlayTimer.control = "stop" ' Stop the timer when video playback stops
+                                          ' Остановить таймер при остановке воспроизведения
     end if
+
+    ' TODO: Move preview player configuration to a separate function
+    ' TODO: Вынести настройку окна предпросмотра в отдельную функцию
+
+    ' Restore the video player to preview mode when not fullscreen
+    ' Вернуть видеоплеер в режим предпросмотра вне полноэкранного режима
     if not m.state.isFullScreen then
         m.nodes.Video.translation = [1200,0]
         m.nodes.Video.width = 720
@@ -511,38 +822,66 @@ sub onVideoStateChange()
 end sub
 
 sub onBufferingStatusChange()
+    ' Handle buffering progress updates
+    ' Обработать обновления прогресса буферизации
     status = m.nodes.Video.bufferingStatus
+
+    ' Validate buffering information before updating the interface
+    ' Проверить данные буферизации перед обновлением интерфейса
     if status <> invalid and status.percentage <> invalid and m.nodes.Video.state = "buffering" then
         m.nodes.Labels.ChannelCount.text = "Cargando canal: " + status.percentage.toStr() + "%"
-        ' Iniciar reproducción cuando se alcance un 5% de buffering para un inicio más rápido
+
+        ' Start playback after reaching 5% buffering for a faster startup
+        ' Начать воспроизведение после достижения 5% буферизации для более быстрого запуска
         if status.percentage >= 5 and not m.minBufferReached then
+            ' TODO: Verify whether sending "play" during buffering improves startup reliability
+            ' TODO: Проверить, действительно ли команда "play" во время буферизации улучшает надёжность запуска
             m.nodes.Video.control = "play"
             m.minBufferReached = true
-            m.forcePlayTimer.control = "stop" ' Detener el temporizador si se alcanza el porcentaje
+            m.forcePlayTimer.control = "stop" ' Stop the timer after reaching the buffering threshold
+                                              ' Остановить таймер после достижения порога буферизации
         end if
     end if
 end sub
 
 sub forcePlayVideo()
+    ' Force playback if buffering takes too long
+    ' Принудительно запустить воспроизведение, если буферизация занимает слишком много времени
     if m.nodes.Video.state = "buffering" and not m.minBufferReached then
         print "Forzando reproducción después de 3 segundos de buffering"
+
+        ' TODO: Verify whether forced playback is necessary for Roku Video nodes
+        ' TODO: Проверить, необходим ли принудительный запуск для узлов Roku Video
         m.nodes.Video.control = "play"
         m.minBufferReached = true
     end if
 end sub
 
 sub resetErrorState()
+    ' Clear the current playback error state
+    ' Сбросить текущее состояние ошибки воспроизведения
     m.errorState = false
+
+    ' Restore the total channel count after playback stops
+    ' Восстановить общее количество каналов после остановки воспроизведения
     if m.nodes.Video.state = "stopped" or m.nodes.Video.state = "finished" then
         m.nodes.Labels.ChannelCount.text = "Canales cargados: " + m.totalChannels.toStr()
     end if
 end sub
 
 sub filterContent(term)
+    ' Remove the currently displayed content before applying the filter
+    ' Удалить текущее отображаемое содержимое перед применением фильтра
     m.content.removeChildrenIndex(m.content.getChildCount(), 0)
+
+    ' Create a separate row for search results
+    ' Создать отдельную строку для результатов поиска
     searchRow = createObject("roSGNode", "ContentNode")
     searchRow.title = "Búsqueda: " + term
     termLower = lcase(term)
+
+    ' Search all channels across all loaded categories
+    ' Выполнить поиск по всем каналам во всех загруженных категориях
     for each cat in m.LoadTask.content.getChildren(-1, 0)
         for each ch in cat.getChildren(-1, 0)
             if lcase(ch.title).instr(termLower) >= 0 then
@@ -553,34 +892,63 @@ sub filterContent(term)
             end if
         end for
     end for
+
+    ' Add the search results row only when matches are found
+    ' Добавить строку результатов поиска только при наличии совпадений
     if searchRow.getChildCount() > 0 then m.content.appendChild(searchRow)
+
+    ' Append all original categories after the search results
+    ' Добавить все исходные категории после результатов поиска
     for each cat in m.LoadTask.content.getChildren(-1, 0)
         categoryClone = cat.clone(true)
+
+        ' Mark all cloned category items as fully loaded
+        ' Отметить все клонированные элементы категорий как полностью загруженные
         for each item in categoryClone.getChildren(-1, 0)
             item.addField("isLoading", "boolean", true)
             item.isLoading = false
         end for
+
         m.content.appendChild(categoryClone)
     end for
+
+    ' Apply the filtered content to the channel list
+    ' Применить отфильтрованное содержимое к списку каналов
     m.nodes.RowList.content = m.content
     count = searchRow.getChildCount()
+
+    ' Display the number of matching results
+    ' Отобразить количество найденных результатов
     if count > 0 then
         m.nodes.Labels.ChannelCount.text = "Resultados: " + count.toStr()
         m.nodes.RowList.jumpToRowItem = [0, 0]
         updateCategoryLabel(0)
     else
+        ' Clear category labels when no matches are found
+        ' Очистить названия категорий, если совпадения не найдены
         m.nodes.Labels.ChannelCount.text = "No se encontraron resultados"
         m.nodes.Labels.Category.text = ""
         m.nodes.Labels.Category2.text = ""
     end if
+
+    ' Log the applied filter and result count
+    ' Вывести в журнал применённый фильтр и количество результатов
     print "Filtro aplicado: "; count; " resultados para "; term
 end sub
 
 function loadRecentUrls() as object
+    ' Load recently used M3U playlist URLs from the registry
+    ' Загрузить недавно использованные URL M3U-плейлистов из реестра
     registry = createObject("roRegistrySection", "RecentM3UUrls")
     urls = []
+
+    ' Read up to three saved playlist URLs
+    ' Прочитать до трёх сохранённых URL плейлистов
     for i = 1 to 3
         key = "url" + i.toStr()
+
+        ' Add the saved URL only if the registry entry exists and is not empty
+        ' Добавить сохранённый URL только в том случае, если запись существует и не пуста
         if registry.exists(key) then
             url = registry.read(key)
             if url <> invalid and url <> "" then
@@ -588,12 +956,18 @@ function loadRecentUrls() as object
             end if
         end if
     end for
+
     return urls
 end function
 
 sub saveRecentUrl(url as string)
+    ' Build a new recent URL list without duplicates
+    ' Сформировать новый список последних URL без дубликатов
     newUrls = []
     found = false
+
+    ' Copy all existing URLs except the one being saved
+    ' Скопировать все существующие URL, кроме сохраняемого
     for each u in m.recentUrls
         if u = url then
             found = true
@@ -602,16 +976,25 @@ sub saveRecentUrl(url as string)
         end if
     end for
     
+    ' Add the current URL to the beginning of the list
+    ' Добавить текущий URL в начало списка
     newUrls.unshift(url)
+
+    ' Keep only the three most recent URLs
+    ' Сохранить только три последних URL
     if newUrls.count() > 3 then
         newUrls = newUrls.slice(0, 3)
     end if
+
     m.recentUrls = newUrls
     
+    ' Save the updated URL history to the registry
+    ' Сохранить обновлённую историю URL в реестр
     registry = createObject("roRegistrySection", "RecentM3UUrls")
     for i = 0 to m.recentUrls.count() - 1
         key = "url" + (i + 1).toStr()
         registry.write(key, m.recentUrls[i])
     end for
+
     registry.flush()
 end sub
