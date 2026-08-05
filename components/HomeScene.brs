@@ -60,6 +60,10 @@ sub init()
     ' Load saved playlists from the registry
     ' Загрузить сохранённые плейлисты из реестра
     m.playlists = loadPlaylists()    
+
+    ' Load the saved playlist loading timeout
+    ' Загрузить сохранённый тайм-аут загрузки плейлиста
+    m.playlistTimeoutSeconds = loadPlaylistTimeout()
         
 
     ' Initialize placeholder content
@@ -110,6 +114,16 @@ sub init()
     m.forcePlayTimer.id = "ForcePlayTimer"
     m.forcePlayTimer.duration = 3 ' Force playback after 3 seconds
                                   ' Принудительно запустить воспроизведение через 3 секунды
+    
+    ' Create a timeout timer for playlist loading
+    ' Создать таймер ограничения времени загрузки плейлиста
+    m.playlistLoadTimer = createObject("roSGNode", "Timer")
+    m.playlistLoadTimer.id = "PlaylistLoadTimer"
+    m.playlistLoadTimer.duration = m.playlistTimeoutSeconds
+    m.playlistLoadTimer.repeat = false
+    m.playlistLoadTimer.observeField("fire", "onPlaylistLoadTimeout")
+    m.top.appendChild(m.playlistLoadTimer)
+
     m.forcePlayTimer.repeat = false
     m.forcePlayTimer.observeField("fire", "forcePlayVideo")
     m.top.appendChild(m.forcePlayTimer)
@@ -676,6 +690,9 @@ sub loadPlaylist(url as string)
     m.isLoadingList = true
     m.loadingProgress = 0
     m.loadingTimer.control = "start"
+    m.playlistLoadTimer.control = "stop"
+    m.playlistLoadTimer.duration = m.playlistTimeoutSeconds
+    m.playlistLoadTimer.control = "start"
 end sub
 
 sub onUrlButtonPressed()
@@ -769,6 +786,7 @@ sub rowListContentChanged()
     ' Остановить отслеживание прогресса загрузки
     m.isLoadingList = false
     m.loadingTimer.control = "stop"
+    m.playlistLoadTimer.control = "stop"
 
     ' Display the first and second category labels when available
     ' Отобразить названия первой и второй категорий, если они доступны
@@ -1146,6 +1164,7 @@ sub openPlaylistDialog()
 
     buttons.push(m.locale.AddPlaylist)
     buttons.push(m.locale.DefaultPlaylist)
+    buttons.push(m.locale.SetPlaylistTimeout)
     buttons.push(m.locale.Cancel)
 
     dialog.buttons = buttons
@@ -1169,9 +1188,8 @@ sub onPlaylistSelected()
     ' Existing playlist selected
     ' Выбран существующий плейлист
     if index >= 0 and index < m.playlistButtonCount then
-        playlist = m.playlists[index]
-        loadPlaylist(playlist.url)
-        m.nodes.RowList.setFocus(true)
+        m.selectedPlaylistIndex = index
+        openPlaylistActionDialog()
         return
     end if
 
@@ -1190,10 +1208,95 @@ sub onPlaylistSelected()
         return
     end if
 
+    ' Open the playlist timeout setting dialog
+    ' Открыть диалог настройки тайм-аута загрузки плейлиста
+    if index = m.playlistButtonCount + 2 then
+        openPlaylistTimeoutDialog()
+        return
+    end if
+
     ' Cancel or close the dialog
     ' Отменить действие или закрыть диалог
     m.nodes.RowList.setFocus(true)
 end sub
+
+sub openPlaylistActionDialog()
+    ' Open actions for the selected playlist
+    ' Открыть действия для выбранного плейлиста
+    if m.selectedPlaylistIndex = invalid then return
+    if m.selectedPlaylistIndex < 0 or m.selectedPlaylistIndex >= m.playlists.count() then return
+
+    playlist = m.playlists[m.selectedPlaylistIndex]
+
+    dialog = createObject("roSGNode", "Dialog")
+    if dialog = invalid then
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    dialog.title = playlist.name
+    dialog.buttons = [
+        m.locale.Load
+        m.locale.DeletePlaylist
+        m.locale.Cancel
+    ]
+
+    dialog.observeField("buttonSelected", "onPlaylistActionSelected")
+    m.top.dialog = dialog
+end sub
+
+sub onPlaylistActionSelected()
+    ' Handle an action for the selected playlist
+    ' Обработать действие для выбранного плейлиста
+    dialog = m.top.dialog
+    if dialog = invalid then return
+
+    index = m.selectedPlaylistIndex
+    button = dialog.buttonSelected
+
+    m.top.dialog = invalid
+
+    if index = invalid or index < 0 or index >= m.playlists.count() then
+        m.selectedPlaylistIndex = invalid
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    playlist = m.playlists[index]
+
+    ' Load the selected playlist
+    ' Загрузить выбранный плейлист
+    if button = 0 then
+        m.selectedPlaylistIndex = invalid
+        loadPlaylist(playlist.url)
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    ' Delete the selected playlist
+    ' Удалить выбранный плейлист
+    if button = 1 then
+        deletePlaylist(index)
+        m.selectedPlaylistIndex = invalid
+        openPlaylistDialog()
+        return
+    end if
+
+    m.selectedPlaylistIndex = invalid
+    m.nodes.RowList.setFocus(true)
+end sub
+
+sub deletePlaylist(index as integer)
+    ' Delete a saved playlist
+    ' Удалить сохранённый плейлист
+    if m.playlists = invalid then return
+    if index < 0 or index >= m.playlists.count() then return
+
+    m.playlists.delete(index)
+    savePlaylists(m.playlists)
+end sub
+
+
 
 sub openAddPlaylistNameDialog()
     ' Open a keyboard dialog for the playlist name
@@ -1279,4 +1382,108 @@ sub onPlaylistUrlEntered()
     m.pendingPlaylistName = invalid
     m.top.dialog = invalid
     m.nodes.RowList.setFocus(true)
+end sub
+
+sub onPlaylistLoadTimeout()
+    ' Stop playlist loading after the timeout
+    ' Остановить загрузку плейлиста после истечения времени
+    if not m.isLoadingList then return
+
+    m.LoadTask.control = "STOP"
+    m.isLoadingList = false
+    m.loadingTimer.control = "stop"
+
+    m.nodes.LoadingAnim1.control = "stop"
+    m.nodes.LoadingAnim2.control = "stop"
+
+    m.nodes.Labels.ChannelCount.text = m.locale.PlaylistLoadFailed
+    m.nodes.Labels.Category.text = ""
+    m.nodes.Labels.Category2.text = ""
+
+    m.nodes.RowList.setFocus(true)
+end sub
+
+function loadPlaylistTimeout() as integer
+    ' Load the playlist loading timeout from the registry
+    ' Загрузить тайм-аут загрузки плейлиста из реестра
+    defaultTimeout = 20
+    registry = createObject("roRegistrySection", "Settings")
+
+    if registry = invalid then return defaultTimeout
+
+    if registry.exists("playlistLoadTimeout") then
+        savedValue = registry.read("playlistLoadTimeout")
+
+        if savedValue <> invalid and savedValue <> "" then
+            timeout = int(val(savedValue))
+
+            if timeout >= 5 and timeout <= 300 then
+                return timeout
+            end if
+        end if
+    end if
+
+    return defaultTimeout
+end function
+
+sub savePlaylistTimeout(timeout as integer)
+    ' Save the playlist loading timeout to the registry
+    ' Сохранить тайм-аут загрузки плейлиста в реестр
+    registry = createObject("roRegistrySection", "Settings")
+    if registry = invalid then return
+
+    registry.write("playlistLoadTimeout", timeout.toStr())
+    registry.flush()
+end sub
+
+sub openPlaylistTimeoutDialog()
+    ' Open a keyboard dialog for the loading timeout
+    ' Открыть экранную клавиатуру для ввода тайм-аута загрузки
+    kb = createObject("roSGNode", "KeyboardDialog")
+
+    if kb = invalid then
+        m.nodes.RowList.setFocus(true)
+        return
+    end if
+
+    kb.backgroundUri = "pkg:/images/FONDO.PNG"
+    kb.title = m.locale.EnterPlaylistTimeout
+    kb.text = m.playlistTimeoutSeconds.toStr()
+    kb.buttons = [
+        m.locale.Load
+        m.locale.Cancel
+    ]
+    kb.observeField("buttonSelected", "onPlaylistTimeoutEntered")
+
+    m.top.dialog = kb
+end sub
+
+sub onPlaylistTimeoutEntered()
+    ' Validate and save the playlist loading timeout
+    ' Проверить и сохранить тайм-аут загрузки плейлиста
+    kb = m.top.dialog
+    if kb = invalid then return
+
+    if kb.buttonSelected = 0 then
+        timeout = int(val(kb.text))
+
+        if timeout >= 5 and timeout <= 300 then
+            m.playlistTimeoutSeconds = timeout
+            savePlaylistTimeout(timeout)
+
+            if m.playlistLoadTimer <> invalid then
+                m.playlistLoadTimer.duration = timeout
+            end if
+
+            m.top.dialog = invalid
+            openPlaylistDialog()
+            return
+        end if
+
+        kb.title = m.locale.InvalidPlaylistTimeout
+        return
+    end if
+
+    m.top.dialog = invalid
+    openPlaylistDialog()
 end sub

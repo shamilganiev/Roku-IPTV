@@ -37,5 +37,10 @@ function getEsStrings() as object
         MyPlaylists: "Mis listas"
         PlaylistName: "Nombre de la lista"
         PlaylistUrl: "URL de la lista"
+        DeletePlaylist: "Eliminar lista"
+        PlaylistLoadFailed: "No se pudo cargar la lista"
+        SetPlaylistTimeout: "Configurar tiempo límite de carga"
+        EnterPlaylistTimeout: "Ingrese el tiempo límite en segundos"
+        InvalidPlaylistTimeout: "Ingrese un número entre 5 y 300"
     }
 end function

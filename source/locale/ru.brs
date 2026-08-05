@@ -37,5 +37,10 @@ function getRuStrings() as object
         MyPlaylists: "Мои плейлисты"
         PlaylistName: "Название плейлиста"
         PlaylistUrl: "URL плейлиста"
+        DeletePlaylist: "Удалить плейлист"
+        PlaylistLoadFailed: "Не удалось загрузить плейлист"
+        SetPlaylistTimeout: "Установить тайм-аут загрузки"
+        EnterPlaylistTimeout: "Введите тайм-аут загрузки в секундах"
+        InvalidPlaylistTimeout: "Введите число от 5 до 300"
     }
 end function

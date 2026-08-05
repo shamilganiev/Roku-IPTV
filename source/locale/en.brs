@@ -37,5 +37,10 @@ function getEnStrings() as object
         MyPlaylists: "My playlists"
         PlaylistName: "Playlist name"
         PlaylistUrl: "Playlist URL"
+        DeletePlaylist: "Delete playlist"
+        PlaylistLoadFailed: "Failed to load playlist"
+        SetPlaylistTimeout: "Set playlist loading timeout"
+        EnterPlaylistTimeout: "Enter loading timeout in seconds"
+        InvalidPlaylistTimeout: "Enter a number from 5 to 300"
     }
 end function
